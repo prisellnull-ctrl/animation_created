@@ -188,6 +188,7 @@ at 1 gob talk voice.m4a sub="текст субтитра"</pre>
 <pre>at 1 text "ДЗЫНЬ!" 135 90 size=30 dur=1.5 color=#ffd63c shadow=#d63a3a
 at 1 say "алло?" 120 140 who=gob voice=low tail=95,250 dur=2 speed=28
 at 1 sub "Субтитр внизу" dur=2
+at 1 type "печатает текст" 138 118 size=14 speed=13   # печать по буквам в мире (на экране монитора, вывеске)
 at 1 fx dust 120 330 n=12   # dust stars sweat steam sparks paper smoke confetti
 at 1 sound @ring vol=0.8
 at 1 shake 5 dur=0.4
@@ -434,7 +435,7 @@ function stripComment(line) { let q = false;
   return line; }
 function newShot(dur) {
   return { dur, name: null, hidden: false, size: [270, 480], layers: [], actors: {}, cams: [], points: {}, texts: [], says: [], sounds: [], talks: [],
-    shakes: [], flashes: [], anims: {}, fx: [], lights: [], tint: null, vignette: 0, trans: null, panels: [], focus: [], subs: [], weather: null, line: -1, endLine: null };
+    shakes: [], flashes: [], anims: {}, fx: [], lights: [], tint: null, vignette: 0, trans: null, panels: [], focus: [], subs: [], weather: null, types: [], line: -1, endLine: null };
 }
 const FX_TYPES = ["dust", "stars", "sweat", "steam", "sparks", "paper", "smoke", "confetti"];
 const TRANS = ["cut", "fade", "white", "wipe", "diag", "iris", "slide", "zoom"];
@@ -493,6 +494,9 @@ function parse(src) {
           const voice = kw.voice || (kw.who ? "mid" : "none"); if (voice !== "none" && !VOICES[voice]) throw new Error(`voice: low mid high robot none`);
           s.says.push({ t, s: pos[2] ?? "", x: num(pos[3], "x"), y: num(pos[4], "y"), dur: opt("dur", 2), tail: tl, size: opt("size", 10),
             who: kw.who || null, voice, speed: opt("speed", 28) }); }
+        else if (who === "type") { kind = "text"; const [x, y] = xy(pos, 3, s);
+          s.types.push({ t, s: pos[2] ?? "", x, y, size: opt("size", 12), color: kw.color || "#1a1423", speed: opt("speed", 14), dur: opt("dur", 1e9),
+            layer: kw.layer !== undefined ? num(kw.layer, "layer") : null, caret: yes("caret", true), click: yes("click", true), seed: li + 3 }); }
         else if (who === "sub") { kind = "say"; s.subs.push({ t, s: pos[2] ?? "", dur: opt("dur", 2) }); }
         else if (who === "sound") { kind = "sound"; s.sounds.push({ t, name: pos[2], vol: opt("vol", 1) }); }
         else if (who === "shake") s.shakes.push({ t, p: pos[2] ? num(pos[2], "сила") : 4, dur: opt("dur", 0.4) });
@@ -677,6 +681,7 @@ function drawScene(c, sh, t, W, H) {
   const cam = camera(sh, t);
   const byL = {}; for (const a of Object.values(sh.actors)) if (!a.parent) (byL[a.layer] ||= []).push(a);
   const fxL = {}; for (const f of sh.fx) { const L = f.layer ?? Math.max(0, Math.min(sh.layers.length - 1, Math.max(0, ...Object.values(sh.actors).map(a => a.layer)))); (fxL[L] ||= []).push(f); }
+  const tyL = {}; for (const y of sh.types) { const L = y.layer ?? Math.max(0, sh.layers.length - 1); (tyL[L] ||= []).push(y); }
   const nL = Math.max(sh.layers.length, 1);
   for (let i = 0; i < nL; i++) {
     const L = sh.layers[i] || { p: 1, blur: 0 };
@@ -686,6 +691,7 @@ function drawScene(c, sh, t, W, H) {
       const asset = L.file && assets.get(L.file); if (asset && asset.img) g.drawImage(asset.img, 0, 0);
       (byL[i] || []).map(a => [a, actorState(a, t).y]).sort((p, q) => p[1] - q[1]).forEach(([a]) => drawActor(g, sh, a, t));
       (fxL[i] || []).forEach(f => drawFx(g, f, t));
+      (tyL[i] || []).forEach(y => drawType(g, y, t));
     };
     if (blur > 0.3) {
       const px = blur * W / 540;
@@ -793,6 +799,21 @@ function drawWeather(c, sh, t, W, H) {
   c.restore();
 }
 
+function typeTimes(y) {
+  if (y._tt) return y._tt; const r = rng(y.seed); let t = 0; const out = [];
+  for (const ch of y.s) { out.push(t); t += (1 / y.speed) * (0.75 + r() * 0.6) * (ch === " " ? 1.6 : 1); }
+  y._tt = out; return out;
+}
+function drawType(c, y, t) {
+  const lt = t - y.t; if (lt < 0 || lt > y.dur) return; const tt = typeTimes(y); const chars = [...y.s];
+  c.save(); c.font = `700 ${y.size}px -apple-system,system-ui,sans-serif`; c.textBaseline = "alphabetic"; c.fillStyle = y.color;
+  let x = y.x, n = 0;
+  chars.forEach((ch, i) => { if (lt < tt[i]) return; n = i + 1; const age = lt - tt[i]; const pop = (1 - EASE.out(clamp(age / 0.12))) * y.size * 0.35;
+    c.fillText(ch, Math.round(x), Math.round(y.y - pop)); x += c.measureText(ch).width; });
+  if (y.caret && (lt * 2) % 1 < 0.6 && (n < chars.length || lt - (tt[chars.length - 1] || 0) < 1.5)) c.fillRect(Math.round(x + 1), Math.round(y.y - y.size * 0.85), 1, Math.round(y.size));
+  c.restore();
+}
+
 const INK = "#1a1423";
 function wordFx(c, x, lt, seed) {
   const r = rng(seed); c.font = `900 ${x.size}px -apple-system,system-ui,sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
@@ -875,6 +896,7 @@ function allSoundEvents() {  // [{gt, buf, vol, speech}]
     for (const so of s.sounds) if (so.t < limit) out.push({ gt: base + so.t, buf: sndBuf(so.name), vol: so.vol });
     for (const k of s.talks) if (k.t < limit) out.push({ gt: base + k.t, buf: sndBuf(k.name), vol: k.vol, speech: true });
     for (const b of s.says) if (b.voice !== "none" && b.t < limit) out.push({ gt: base + b.t, buf: voiceBuf(b), vol: 0.8, speech: true });
+    for (const y of s.types) if (y.click && y.t < limit) typeTimes(y).forEach((ct, i) => { if (!/\s/.test([...y.s][i])) out.push({ gt: base + y.t + ct, buf: SYN.type, vol: 0.45 }); });
     for (const p of s.panels) if (p.shot) addShot(p.shot, base + p.from, p.to - p.from);
   };
   for (const s of PROJ.shots) { addShot(s, acc, s.dur); acc += s.dur; }
