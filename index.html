@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#14121e">
+<title>Пиксель-мульт</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="Пиксель-мульт">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{--bg:#14121e;--panel:#1f1c2e;--line:#35304a;--txt:#ece8f6;--dim:#9a93b3;--acc:#ffd63c;--red:#e5484d;--ok:#4cc38a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;overscroll-behavior:none;margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 -apple-system,system-ui,sans-serif}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{display:flex;align-items:center;gap:8px;padding:10px 12px}
+header h1{font-size:17px;margin:0;letter-spacing:.3px;white-space:nowrap}
+header h1 b{color:var(--acc)}
+header select{flex:1;min-width:0}
+button{font:inherit;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-height:40px}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.5}
+button.pri{background:var(--acc);color:#1a1423;border-color:var(--acc);font-weight:700}
+button.on{background:#3a2f12;border-color:var(--acc);color:var(--acc)}
+button.danger{color:var(--red)}
+button.rec{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+#stage{position:relative;display:flex;justify-content:center;background:#0b0a12;padding:8px 0}
+#cv{display:block;max-height:44vh;max-width:100%;image-rendering:pixelated;border-radius:6px}
+#safecv{position:absolute;pointer-events:none;display:none}
+#tap{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:#000c;padding:6px 10px;border-radius:8px;font:13px ui-monospace,monospace;display:none;white-space:nowrap;z-index:2}
+#stagebar{display:flex;gap:6px;padding:6px 12px 0;flex-wrap:wrap}
+#stagebar button{min-height:36px;padding:6px 10px;font-size:14px}
+.camonly{display:none}
+body.cam .camonly{display:inline-block}
+body.cam #cv{outline:2px solid var(--acc);touch-action:none}
+#transport{display:flex;align-items:center;gap:10px;padding:8px 12px 4px}
+#play{width:48px;font-size:18px}
+#scrub{flex:1;accent-color:var(--acc);height:32px}
+#tlabel{font:13px ui-monospace,monospace;color:var(--dim);min-width:84px;text-align:right}
+#tl{display:block;width:calc(100% - 24px);height:64px;margin:0 12px 8px;background:#0f0d18;border:1px solid var(--line);border-radius:8px;touch-action:none}
+nav{display:flex;gap:4px;padding:0 12px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{border:none;background:none;border-radius:0;color:var(--dim);padding:10px 10px;border-bottom:2px solid transparent;white-space:nowrap}
+nav button.on{color:var(--txt);border-bottom-color:var(--acc);background:none}
+section{display:none;padding:12px}
+section.on{display:block}
+textarea{width:100%;min-height:42vh;background:#0f0d18;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:8px;font:12px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;overflow-y:auto;resize:vertical;tab-size:2}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+#err{color:var(--red);font:12px ui-monospace,monospace;white-space:pre-wrap;margin-top:6px}
+#okmsg{color:var(--ok);font-size:13px}
+.file{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;margin:6px 0;background:var(--panel)}
+.file .th{width:52px;height:40px;background:#0b0a12 center/contain no-repeat;image-rendering:pixelated;border-radius:4px;flex:none;display:flex;align-items:center;justify-content:center;font-size:18px}
+.file .nm{flex:1;min-width:0;font:12px ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis}
+.file .sz{color:var(--dim);font-size:11px}
+.file button{min-height:34px;padding:6px 8px}
+h4{margin:14px 0 4px;font-size:14px;color:var(--acc)}
+.hint{color:var(--dim);font-size:13px}
+select,input[type=text],input[type=number]{font:inherit;font-size:16px;background:#0f0d18;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:9px}
+label.chk{display:flex;align-items:center;gap:6px;font-size:14px}
+#out video{width:100%;max-height:50vh;border-radius:8px;background:#000;margin-top:8px}
+.help h3{margin:16px 0 4px;font-size:15px;color:var(--acc)}
+.help pre{background:#0f0d18;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0}
+.help p{margin:6px 0}
+#dlg{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:9;padding:12px}
+#dlg .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;width:100%;max-width:460px;max-height:86vh;overflow-y:auto}
+#dlg .ttl{font-weight:700;margin-bottom:8px}
+#dlg .fld{display:flex;flex-direction:column;gap:4px;margin:8px 0;font-size:13px;color:var(--dim)}
+#dlg .fld input,#dlg .fld select{width:100%}
+#dlg .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#dlg .grid button{text-align:left;min-height:46px}
+#prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:8px;display:none}
+#prog div{height:100%;width:0;background:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <h1><b>Пиксель</b>-мульт</h1>
+  <select id="proj"></select>
+  <button id="bMenu">⋯</button>
+  <input type="file" id="fLoad" accept=".json,application/json" hidden>
+</header>
+
+<div id="stage"><canvas id="cv" width="270" height="480"></canvas><canvas id="safecv"></canvas><div id="tap"></div></div>
+<div id="stagebar">
+  <button id="bCam">🎥 Камера</button>
+  <button id="bSafe">⧉ Зоны Shorts</button>
+  <button id="bKey" class="camonly">＋ Ключ</button>
+  <button id="bCamRec" class="camonly">● Запись камеры</button>
+</div>
+<div id="transport">
+  <button id="play">▶</button>
+  <input type="range" id="scrub" min="0" max="1000" value="0">
+  <span id="tlabel">0.00 / 0.00</span>
+</div>
+<canvas id="tl"></canvas>
+
+<nav>
+  <button data-t="script" class="on">Сценарий</button>
+  <button data-t="files">Файлы</button>
+  <button data-t="export">Экспорт</button>
+  <button data-t="help">Справка</button>
+</nav>
+
+<section id="t-script" class="on">
+  <div class="row"><button class="pri" id="bAddLine">＋ Строка</button><button id="bTpl">Шаблон</button><button id="bApply">Применить</button><span id="okmsg"></span></div>
+  <textarea id="script" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+  <div id="err"></div>
+</section>
+
+<section id="t-files">
+  <div class="row">
+    <button class="pri" id="bAdd">+ PNG / звук</button>
+    <button id="bMic">🎤 Записать голос</button>
+    <input type="file" id="fAdd" accept="image/png,image/*,audio/*,.wav,.mp3,.m4a" multiple hidden>
+  </div>
+  <div id="micmsg" class="hint"></div>
+  <p class="hint">Персонаж: <code>имя-анимация-кадры.png</code> (<code>goblin-idle-4.png</code>). <code>имя-talk-N.png</code> — рот от закрытого к открытому. <code>имя-blink-1.png</code> — закрытые глаза поверх. Кнопка ⇄ переносит файл в библиотеку (видна во всех проектах) и обратно.</p>
+  <h4>Файлы проекта</h4><div id="flist"></div>
+  <h4>Библиотека — во всех проектах</h4><div id="llist"></div>
+  <div class="row"><button class="danger" id="bDemo">Сбросить проект на демо</button></div>
+</section>
+
+<section id="t-export">
+  <div class="row">
+    <select id="res"><option value="1080">1080 × 1920</option><option value="720" selected>720 × 1280</option></select>
+    <select id="fps"><option value="30" selected>30 fps</option><option value="60">60 fps</option></select>
+  </div>
+  <div class="row"><label class="chk"><input type="checkbox" id="mbOn" checked> Размытие движения</label></div>
+  <p class="hint">Запись идёт в реальном времени: экран не выключать, приложение не сворачивать. Если видео дёргается — 720p, 30 fps, без размытия.</p>
+  <div class="row"><button class="pri" id="bRec">● Записать видео</button><button id="bCover">🖼 Обложка (кадр в PNG)</button></div>
+  <div id="prog"><div></div></div>
+  <div id="recmsg" class="hint"></div>
+  <div id="out"></div>
+</section>
+
+<section id="t-help" class="help">
+  <p><b>Быстро:</b> «＋ Строка» — добавить команду кнопками; «Шаблон» — готовый кусок сцены. Время берётся из ползунка, точка — из последнего тапа по картинке. <b>🎥 Камера</b>: тяни пальцем и своди двумя — кадр двигается; «＋ Ключ» ставит ключ, «● Запись камеры» записывает движение во время проигрывания. Полоска событий: тап — перемотка, перетаскивание отметки — новое время.</p>
+
+  <h3>Весь ролик</h3>
+<pre>bpm 120                    # время можно писать в битах: 4b, 2.5b
+music track.mp3 vol=0.6 duck=0.35
+music @chill               # встроенная музыка: @chill @tense @funky @epic</pre>
+
+  <h3>План</h3>
+<pre>shot 5                     # новый план (или 8b)
+shot 4 name=her hidden     # только для панели
+transition fade dur=0.4    # fade white wipe diag iris slide zoom
+size 270 480
+layer bg.png parallax=0.6
+layer fg.png parallax=1.4 blur=2
+point phone 150 300
+tint #0a1030 0.35
+vignette 0.5
+light 200 260 90 color=#8fe6ff power=0.7 flicker=0.1 strobe=0.2
+weather rain amount=1 wind=0.3   # rain snow dust</pre>
+
+  <h3>Персонажи и скелет</h3>
+<pre>actor gob goblin x=90 y=330 layer=1 anchor=24,64 fps=6 shadow=yes blink=yes
+anim goblin talk fps=10
+anim goblin startle loop=no
+# скелет: части с точкой вращения (anchor) и родителем
+actor body gobbody x=90 y=330 layer=1 anchor=20,40
+actor arm  gobarm parent=body x=6 y=-28 anchor=3,3
+actor arm2 gobarm parent=body x=-4 y=-28 anchor=3,3 behind=yes
+at 0 arm swing amp=25 freq=1.5 dur=3   # качание: rot x y</pre>
+
+  <h3>Камера</h3>
+<pre>cam 0   135 240 1          # время x y зум [наклон°]
+cam 2.4 @phone 2.5 -3
+at 2 focus 2 amount=4 dur=0.4</pre>
+
+  <h3>Действия</h3>
+<pre>at 1 gob play talk
+at 1 gob move 150 330 0.6 ease=inout arc=20
+at 1 gob jump 12 dur=0.3
+at 1 gob rotate 15 0.3
+at 1 gob scale 1.5 0.3
+at 1 gob wobble amp=10 axis=rot freq=7 decay=5
+at 1 gob swing amp=20 freq=2 dur=2 axis=rot
+at 1 gob squash 0.3 dur=0.4
+at 1 gob face left
+at 1 gob hide
+at 1 gob talk voice.m4a sub="текст субтитра"</pre>
+
+  <h3>Текст, речь, звук, эффекты</h3>
+<pre>at 1 text "ДЗЫНЬ!" 135 90 size=30 dur=1.5 color=#ffd63c shadow=#d63a3a
+at 1 say "алло?" 120 140 who=gob voice=low tail=95,250 dur=2 speed=28
+at 1 sub "Субтитр внизу" dur=2
+at 1 fx dust 120 330 n=12   # dust stars sweat steam sparks paper smoke confetti
+at 1 sound @ring vol=0.8
+at 1 shake 5 dur=0.4
+at 1 flash dur=0.12
+panel her 1 4 side=right    # right left top bottom diag</pre>
+  <p>Звуки: <code>@ring @thud @click @type @whoosh @pop @boing @beep @hit @step @knock @punch @glass @blip @alarm @coin @jump @fail @tada</code>.</p>
+  <p>Координаты <code>text</code>, <code>say</code> — экранные (0…270 × 0…480), остальные — в мире.</p>
+  <h3>Проекты</h3>
+  <p>Кнопка ⋯ вверху: новый проект, переименовать, копия, удалить, сохранить в файл, открыть файл. Данные хранятся в браузере, iOS может их стереть — сохраняй файл.</p>
+</section>
+
+<div id="dlg"><div class="box" id="dlgBox"></div></div>
+
+<script>
+"use strict";
+// ---- запрет масштабирования (iOS игнорирует user-scalable=no) ----
+["gesturestart", "gesturechange", "gestureend"].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+document.addEventListener("touchmove", e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+let _lastTouch = 0;
+document.addEventListener("touchend", e => { const n = Date.now(); if (n - _lastTouch < 300 && !e.target.closest("textarea,input,select")) e.preventDefault(); _lastTouch = n; }, { passive: false });
+
+// ================================================================ utils
+const $ = s => document.querySelector(s);
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, u) => a + (b - a) * u;
+const TAU = Math.PI * 2;
+const EASE = {
+  linear: u => u, in: u => u * u * u, out: u => 1 - (1 - u) ** 3,
+  inout: u => u * u * u * (u * (u * 6 - 15) + 10),
+  back: u => 1 + 2.7 * (u - 1) ** 3 + 1.7 * (u - 1) ** 2,
+};
+function spline(keys, t) {
+  if (t <= keys[0][0]) return keys[0][1];
+  if (t >= keys[keys.length - 1][0]) return keys[keys.length - 1][1];
+  let i = 0; while (keys[i + 1][0] < t) i++;
+  const [t0, p1] = keys[i], [t1, p2] = keys[i + 1];
+  const p0 = i > 0 ? keys[i - 1][1] : p1, p3 = i + 2 < keys.length ? keys[i + 2][1] : p2;
+  const u = (t - t0) / (t1 - t0);
+  return p1.map((b, k) => { const a = p0[k], c = p2[k], d = p3[k];
+    return 0.5 * (2 * b + (-a + c) * u + (2 * a - 5 * b + 4 * c - d) * u * u + (-a + 3 * b - 3 * c + d) * u ** 3); });
+}
+function rng(seed) { let s = (seed * 2654435761) >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
+function hexRGB(h) { h = h.replace("#", ""); if (h.length === 3) h = [...h].map(c => c + c).join(""); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function ask(title, fields = [], buttons = ["OK", "Отмена"]) {
+  return new Promise(res => {
+    const box = $("#dlgBox"); box.innerHTML = ""; const tt = document.createElement("div"); tt.className = "ttl"; tt.textContent = title; box.append(tt);
+    const inputs = {};
+    for (const f of fields) {
+      const w = document.createElement("label"); w.className = "fld"; const sp = document.createElement("span"); sp.textContent = f.label ?? f.key; w.append(sp);
+      let el;
+      if (f.type === "select") { el = document.createElement("select"); for (const o of f.options) { const op = document.createElement("option"); op.value = op.textContent = o; el.append(op); } if (f.value !== undefined) el.value = f.value; }
+      else { el = document.createElement("input"); el.type = f.type === "number" ? "number" : "text"; if (f.type === "number") { el.step = "any"; el.inputMode = "decimal"; } el.value = f.value ?? ""; el.autocapitalize = "off"; }
+      inputs[f.key] = el; w.append(el); box.append(w);
+    }
+    const row = document.createElement("div"); row.className = "row";
+    buttons.forEach((b, i) => { const bt = document.createElement("button"); bt.textContent = b; if (i === 0) bt.className = "pri";
+      bt.onclick = () => { $("#dlg").style.display = "none"; if (i === buttons.length - 1 && buttons.length > 1) return res(null);
+        const v = {}; for (const k in inputs) v[k] = inputs[k].value.trim(); res(v); }; row.append(bt); });
+    box.append(row); $("#dlg").style.display = "flex";
+  });
+}
+function menu(title, items, grid) {
+  return new Promise(res => {
+    const box = $("#dlgBox"); box.innerHTML = ""; const tt = document.createElement("div"); tt.className = "ttl"; tt.textContent = title; box.append(tt);
+    const wrap = document.createElement("div"); if (grid) wrap.className = "grid"; else wrap.style.cssText = "display:flex;flex-direction:column;gap:8px";
+    for (const [v, l] of items) { const b = document.createElement("button"); b.textContent = l; b.onclick = () => { $("#dlg").style.display = "none"; res(v); }; wrap.append(b); }
+    const c = document.createElement("button"); c.textContent = "Отмена"; c.style.marginTop = "10px"; c.onclick = () => { $("#dlg").style.display = "none"; res(null); };
+    box.append(wrap, c); $("#dlg").style.display = "flex";
+  });
+}
+async function dialog(title, value) { const r = await ask(title, [{ key: "v", label: "", value }]); return r ? r.v : null; }
+// пул холстов для переходов, панелей, размытия
+const POOL = [];
+function getBuf(W, H) { let c = POOL.pop(); if (!c) { c = document.createElement("canvas"); c._ctx = c.getContext("2d"); }
+  if (c.width !== W || c.height !== H) { c.width = W; c.height = H; } c._ctx.setTransform(1, 0, 0, 1, 0, 0); c._ctx.globalAlpha = 1; c._ctx.globalCompositeOperation = "source-over"; c._ctx.filter = "none"; return c; }
+function relBuf(c) { POOL.push(c); }
+
+// ================================================================ storage
+const store = { mem: new Map(), db: null };
+async function dbOpen() {
+  try {
+    store.db = await new Promise((res, rej) => {
+      const r = indexedDB.open("pixmult", 1);
+      r.onupgradeneeded = () => { r.result.createObjectStore("files"); r.result.createObjectStore("meta"); };
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  } catch (e) { store.db = null; }
+}
+function tx(name, mode, fn) {
+  return new Promise((res, rej) => {
+    try { const t = store.db.transaction(name, mode); const r = fn(t.objectStore(name)); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error); }
+    catch (e) { rej(e); }
+  });
+}
+async function dbPut(st, k, v) { if (store.db) try { await tx(st, "readwrite", s => s.put(v, k)); return; } catch (e) {} store.mem.set(st + ":" + k, v); }
+async function dbDel(st, k) { if (store.db) try { await tx(st, "readwrite", s => s.delete(k)); return; } catch (e) {} store.mem.delete(st + ":" + k); }
+async function dbGet(st, k) { if (store.db) try { return await tx(st, "readonly", s => s.get(k)); } catch (e) {} return store.mem.get(st + ":" + k); }
+async function dbAll(st) {
+  if (store.db) try {
+    return await new Promise((res, rej) => {
+      const out = []; const t = store.db.transaction(st, "readonly"); const r = t.objectStore(st).openCursor();
+      r.onsuccess = () => { const c = r.result; if (c) { out.push([c.key, c.value]); c.continue(); } else res(out); }; r.onerror = () => rej(r.error);
+    });
+  } catch (e) {}
+  return [...store.mem].filter(([k]) => k.startsWith(st + ":")).map(([k, v]) => [k.slice(st.length + 1), v]);
+}
+
+// ================================================================ audio
+let actx = null, master = null;
+function audio() {
+  if (!actx) {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    master = actx.createGain(); master.connect(actx.destination);
+    buildSynth(); buildSynth2();
+    for (const a of assets.values()) if (a.kind === "snd" && !a.buf && !a.err) loadSnd(a);
+  }
+  if (actx.state === "suspended") actx.resume();
+  return actx;
+}
+const SYN = {};
+function mkBuf(dur, f) { const sr = actx.sampleRate, n = Math.max(1, Math.floor(dur * sr)), b = actx.createBuffer(1, n, sr), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = f(i / sr, i, n); return b; }
+function buildSynth() {
+  const noise = () => Math.random() * 2 - 1; let lp = 0;
+  SYN.ring = mkBuf(0.9, t => { const k = Math.floor(t * 40), tt = t - k / 40, f = k % 2 ? 980 : 1150;
+    return (Math.sin(TAU * f * tt) + .5 * Math.sin(TAU * f * 2.76 * tt)) * Math.exp(-tt * 18) * .5 * Math.min(1, (0.9 - t) * 20); });
+  SYN.thud = mkBuf(0.45, t => (Math.sin(TAU * (45 * t + 40 * (1 - Math.exp(-t * 10)) / 10)) * Math.exp(-t * 9) + noise() * Math.exp(-t * 40) * .4) * .9);
+  SYN.click = mkBuf(0.06, t => noise() * Math.exp(-t * 150) * .7);
+  SYN.type = mkBuf(0.06, t => (noise() * .6 + Math.sin(TAU * 320 * t) * .5) * Math.exp(-t * 110) * .6);
+  lp = 0; SYN.whoosh = mkBuf(0.5, (t, i, n) => { const u = i / n, a = 0.02 + 0.25 * Math.sin(Math.PI * u); lp += a * (noise() - lp); return lp * Math.sin(Math.PI * u) ** 2 * 1.6; });
+  SYN.pop = mkBuf(0.15, t => Math.sin(TAU * (500 * t + 4000 * t * t)) * Math.exp(-t * 22) * .6);
+  SYN.boing = mkBuf(0.45, t => Math.sin(TAU * (220 * t + 30 * Math.sin(t * 40) / 40 * 6)) * Math.exp(-t * 6) * .6);
+  SYN.beep = mkBuf(0.22, t => Math.sin(TAU * 425 * t) * Math.min(1, t * 200, (0.22 - t) * 200) * .4);
+  lp = 0; SYN.hit = mkBuf(1.4, t => { lp += 0.15 * (noise() - lp);
+    return Math.tanh((Math.sin(TAU * (38 * t + 70 * (1 - Math.exp(-t * 8)) / 8)) * Math.exp(-t * 2.5) * 1.2 + lp * Math.exp(-t * 7) * 2) * 2) * .8; });
+}
+function buildSynth2() {
+  const noise = () => Math.random() * 2 - 1; let lp = 0;
+  const sq = (t, f) => ((t * f) % 1 < .5 ? 1 : -1);
+  SYN.step = mkBuf(0.12, t => { lp += .3 * (noise() - lp); return (lp * 2 + Math.sin(TAU * 90 * t) * .6) * Math.exp(-t * 40); });
+  SYN.knock = mkBuf(0.5, t => { let s = 0; for (const o of [0, .16, .32]) if (t >= o) { const u = t - o; s += (Math.sin(TAU * 180 * u) * .7 + noise() * .3) * Math.exp(-u * 45); } return s * .8; });
+  lp = 0; SYN.punch = mkBuf(0.35, t => { lp += .2 * (noise() - lp); return Math.tanh((Math.sin(TAU * (60 * t + 50 * (1 - Math.exp(-t * 20)) / 20)) * Math.exp(-t * 12) + lp * 2 * Math.exp(-t * 25)) * 2) * .8; });
+  SYN.glass = mkBuf(1.0, t => { let s = 0; for (const [f, d] of [[2300, 5], [3170, 7], [4410, 9], [5200, 11]]) s += Math.sin(TAU * f * t) * Math.exp(-t * d); return (s * .2 + noise() * Math.exp(-t * 30) * .5) * .7; });
+  SYN.blip = mkBuf(0.08, t => sq(t, 880) * .3 * Math.exp(-t * 30));
+  SYN.alarm = mkBuf(1.2, t => sq(t, t % .3 < .15 ? 880 : 660) * .22);
+  SYN.coin = mkBuf(0.35, t => sq(t, t < .07 ? 988 : 1319) * .25 * Math.exp(-t * 7));
+  SYN.jump = mkBuf(0.25, t => sq(t, 300 + 900 * t) * .22 * Math.exp(-t * 6));
+  SYN.fail = mkBuf(1.3, t => { const k = Math.min(3, Math.floor(t / .3)); const f = [392, 370, 349, 330][k] * (k === 3 ? 1 + .02 * Math.sin(t * 40) : 1); const u = t - k * .3;
+    return (((t * f) % 1) * 2 - 1) * .25 * Math.exp(-u * (k < 3 ? 3 : 2)); });
+  SYN.tada = mkBuf(1.4, t => { let s = 0; [523, 659, 784, 1047].forEach((f, i) => { const o = i * .06; if (t >= o) s += sq(t, f) * Math.exp(-(t - o) * 2.2); }); return s * .09; });
+}
+const MUSIC_STYLES = ["chill", "tense", "funky", "epic"];
+const musicCache = new Map();
+function genMusic(style, bpm) {
+  const key = style + bpm; if (musicCache.has(key)) return musicCache.get(key);
+  const sr = actx.sampleRate, beat = 60 / bpm, bars = 8, n = Math.floor(bars * 4 * beat * sr);
+  const b = actx.createBuffer(2, n, sr), L = b.getChannelData(0), R = b.getChannelData(1);
+  const mtof = m => 440 * 2 ** ((m - 69) / 12);
+  const P = {
+    chill: { prog: [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]], bass: [0, null, null, 0, null, 12, null, 7], arp: .045, drums: "soft", wave: "tri" },
+    tense: { prog: [[57, 60, 64], [57, 60, 65], [56, 59, 64], [57, 60, 63]], bass: [0, 0, 0, 0, 0, 0, 1, 1], arp: .04, drums: "tick", wave: "sq" },
+    funky: { prog: [[53, 57, 60, 64], [55, 59, 62, 65], [57, 60, 64, 67], [55, 59, 62, 65]], bass: [0, null, 12, 0, null, 10, 12, null], arp: .04, drums: "groove", wave: "sq" },
+    epic: { prog: [[50, 53, 57], [46, 50, 53], [48, 52, 55], [45, 49, 52]], bass: [0, 0, null, 0, 0, null, 0, 7], arp: .05, drums: "big", wave: "saw" },
+  }[style];
+  const add = (t0, dur, fn, vol, pan = 0) => { const i0 = Math.floor(t0 * sr), m = Math.floor(dur * sr);
+    for (let k = 0; k < m && i0 + k < n; k++) { const v = fn(k / sr) * vol; L[i0 + k] += v * (1 - pan); R[i0 + k] += v * (1 + pan); } };
+  const osc = (f, w) => t => { const p = (t * f) % 1; return w === "sq" ? (p < .5 ? 1 : -1) : w === "saw" ? p * 2 - 1 : 1 - 4 * Math.abs(p - .5); };
+  for (let bar = 0; bar < bars; bar++) {
+    const ch = P.prog[bar % P.prog.length], t0 = bar * 4 * beat;
+    P.bass.forEach((o, k) => { if (o === null) return; const o2 = osc(mtof(ch[0] - 24 + o), "sq"); add(t0 + k * beat / 2, beat / 2 * .9, t => o2(t) * Math.exp(-t * 4), .12); });
+    for (let k = 0; k < 16; k++) { const o2 = osc(mtof(ch[k % ch.length] + 12 + (Math.floor(k / ch.length) % 2) * 12), P.wave); add(t0 + k * beat / 4, beat / 4 * .85, t => o2(t) * Math.exp(-t * 10), P.arp, k % 2 ? .3 : -.3); }
+    ch.forEach(m => { const o2 = osc(mtof(m), "tri"); add(t0, 4 * beat, t => o2(t) * Math.min(1, t * 4, (4 * beat - t) * 4), .025); });
+    for (let k = 0; k < 8; k++) {
+      const tt = t0 + k * beat / 2;
+      const kick = () => add(tt, .2, t => Math.sin(TAU * (50 * t + 60 * (1 - Math.exp(-t * 30)) / 30)) * Math.exp(-t * 14), .33);
+      const snare = (v = .11) => add(tt, .15, t => (Math.random() * 2 - 1) * Math.exp(-t * 25), v);
+      const hat = (v = .035) => add(tt, .04, t => (Math.random() * 2 - 1) * Math.exp(-t * 90), v);
+      if (P.drums === "soft") { if (k === 0 || k === 5) kick(); if (k === 4) snare(.06); hat(.022); }
+      else if (P.drums === "tick") { if (k % 4 === 0) kick(); hat(.03); }
+      else if (P.drums === "groove") { if (k === 0 || k === 3 || k === 5) kick(); if (k === 2 || k === 6) snare(); hat(); }
+      else { if (k % 2 === 0) kick(); if (k === 4) snare(.16); hat(.028); }
+    }
+  }
+  musicCache.set(key, b); return b;
+}
+
+const VOICES = { low: [95, 0.35], mid: [170, 0.3], high: [290, 0.25], robot: [140, 0] };
+const voiceCache = new Map();
+function voiceBuf(say) {  // бормотание: короткий слог на каждую букву
+  const key = say.s + "|" + say.voice + "|" + say.speed;
+  if (voiceCache.has(key)) return voiceCache.get(key);
+  const [f0, jit] = VOICES[say.voice] || VOICES.mid; const chars = [...say.s]; const r = rng(hashStr(say.s));
+  const dt = 1 / say.speed; const dur = chars.length * dt + 0.2; const sr = actx.sampleRate;
+  const b = actx.createBuffer(1, Math.floor(dur * sr), sr), d = b.getChannelData(0);
+  chars.forEach((ch, i) => {
+    if (/[\s.,!?…\-—:;]/.test(ch)) return;
+    const vow = /[аеёиоуыэюяaeiouy]/i.test(ch); const f = f0 * (1 + (r() - .5) * 2 * jit) * (vow ? 1.08 : 0.94);
+    const len = dt * (vow ? 1.1 : 0.8), i0 = Math.floor(i * dt * sr), n = Math.floor(len * sr);
+    let ph = 0;
+    for (let k = 0; k < n && i0 + k < d.length; k++) { const t = k / sr; const env = Math.min(1, t * 300) * Math.exp(-t * (vow ? 9 : 18));
+      ph += f * (1 + 0.04 * Math.sin(t * 40)) / sr; const sq = (ph % 1) < 0.35 ? 1 : -1; const tri = 1 - 4 * Math.abs((ph % 1) - .5);
+      d[i0 + k] += (say.voice === "robot" ? sq * .25 : tri * .35 + sq * .1) * env; }
+  });
+  voiceCache.set(key, b); return b;
+}
+function envelope(buf) {  // громкость 60 раз в секунду для рта
+  if (buf._env) return buf._env; const d = buf.getChannelData(0), step = Math.floor(buf.sampleRate / 60), env = [];
+  let mx = 1e-6; for (let i = 0; i < d.length; i += step) { let s = 0; for (let k = i; k < i + step && k < d.length; k++) s += d[k] * d[k]; const v = Math.sqrt(s / step); env.push(v); mx = Math.max(mx, v); }
+  buf._env = env.map(v => v / mx); return buf._env;
+}
+
+// ================================================================ assets
+const assets = new Map();
+async function loadAsset(name, blob, lib) {
+  const a = { blob, lib: !!lib };
+  if ((blob.type || "").startsWith("image") || /\.(png|gif|jpe?g|webp)$/i.test(name)) {
+    a.kind = "img"; a.url = URL.createObjectURL(blob);
+    a.img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = a.url; });
+  } else { a.kind = "snd"; await loadSnd(a); }
+  const old = assets.get(name); if (old && old.url) URL.revokeObjectURL(old.url);
+  assets.set(name, a);
+}
+async function loadSnd(a) {
+  try { const ab = await a.blob.arrayBuffer();
+    const c = actx || new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, 48000, 48000);
+    a.buf = await new Promise((res, rej) => { const p = c.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); a.err = false;
+  } catch (e) { a.err = true; }
+}
+function sndBuf(name) { if (!name) return null; if (name[0] === "@") return SYN[name.slice(1)] || null; const a = assets.get(name); return a && a.buf || null; }
+const spriteCache = new Map();
+function spriteAnims(sprite) {
+  if (spriteCache.has(sprite)) return spriteCache.get(sprite);
+  const m = new Map(); const re = new RegExp("^" + sprite.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "-(.+?)(?:-(\\d+))?\\.png$", "i");
+  for (const [name, a] of assets) { const r = name.match(re); if (r && a.kind === "img") m.set(r[1], { img: a.img, n: +(r[2] || 1) }); }
+  spriteCache.set(sprite, m); return m;
+}
+
+// ================================================================ parser
+function tokens(line) { const out = []; const re = /"([^"]*)"|(\S+)/g; let m;
+  while ((m = re.exec(line))) out.push(m[1] !== undefined ? { s: m[1], q: true } : { s: m[2], q: false }); return out; }
+function stripComment(line) { let q = false;
+  for (let i = 0; i < line.length; i++) { const c = line[i]; if (c === '"') q = !q; if (c === "#" && !q && (i === 0 || /\s/.test(line[i - 1]))) return line.slice(0, i); }
+  return line; }
+function newShot(dur) {
+  return { dur, name: null, hidden: false, size: [270, 480], layers: [], actors: {}, cams: [], points: {}, texts: [], says: [], sounds: [], talks: [],
+    shakes: [], flashes: [], anims: {}, fx: [], lights: [], tint: null, vignette: 0, trans: null, panels: [], focus: [], subs: [], weather: null, line: -1, endLine: null };
+}
+const FX_TYPES = ["dust", "stars", "sweat", "steam", "sparks", "paper", "smoke", "confetti"];
+const TRANS = ["cut", "fade", "white", "wipe", "diag", "iris", "slide", "zoom"];
+function parse(src) {
+  const P = { shots: [], all: [], bpm: 0, music: null, errs: [], ticks: [] }; let sh = null;
+  const need = () => { if (!sh) { sh = newShot(5); P.all.push(sh); } return sh; };
+  src.split("\n").forEach((raw, li) => {
+    const line = stripComment(raw).trim(); if (!line) return;
+    const tk = tokens(line); const pos = [], kw = {};
+    tk.slice(1).forEach(t => { if (!t.q && t.s.includes("=")) { const [k, ...v] = t.s.split("="); kw[k] = v.join("="); } else pos.push(t.s); });
+    const num = (v, what) => {
+      if (typeof v === "string" && /^-?[\d.]+b$/.test(v)) { if (!P.bpm) throw new Error(`время в битах (${v}) — сначала строка bpm`); return parseFloat(v) * 60 / P.bpm; }
+      const n = parseFloat(v); if (!isFinite(n)) throw new Error(`ожидалось число (${what}), а тут «${v ?? ""}»`); return n; };
+    const xy = (arr, i, s) => {
+      if (arr[i] && arr[i][0] === "@") { const p = s.points[arr[i].slice(1)]; if (!p) throw new Error(`нет точки «${arr[i]}» (объяви: point имя x y)`); return [p[0], p[1], i + 1]; }
+      return [num(arr[i], "x"), num(arr[i + 1], "y"), i + 2]; };
+    const opt = (k, d) => kw[k] !== undefined ? num(kw[k], k) : d;
+    const yes = (k, d) => kw[k] === undefined ? d : !/^(no|нет|false|0|off)$/i.test(kw[k]);
+    try {
+      const c = tk[0].s;
+      if (c === "bpm") P.bpm = num(pos[0], "bpm");
+      else if (c === "music") P.music = { name: pos[0], vol: opt("vol", 0.6), duck: opt("duck", 0.35), from: opt("from", 0) };
+      else if (c === "shot") { sh = newShot(num(pos[0], "длительность")); sh.name = kw.name || null; sh.hidden = pos.includes("hidden") || yes("hidden", false); sh.line = li; P.all.push(sh); }
+      else if (c === "duration") need().dur = num(pos[0], "длительность");
+      else if (c === "size") need().size = [num(pos[0], "ширина"), num(pos[1], "высота")];
+      else if (c === "transition") { if (!TRANS.includes(pos[0])) throw new Error(`переходы: ${TRANS.join(" ")}`); need().trans = { type: pos[0], dur: opt("dur", 0.4) }; }
+      else if (c === "layer") need().layers.push({ file: pos[0], p: opt("parallax", 1), blur: opt("blur", 0) });
+      else if (c === "point") need().points[pos[0]] = [num(pos[1], "x"), num(pos[2], "y")];
+      else if (c === "weather") { if (!["rain", "snow", "dust"].includes(pos[0])) throw new Error("weather: rain snow dust"); need().weather = { type: pos[0], amount: opt("amount", 1), wind: opt("wind", 0) }; }
+      else if (c === "tint") need().tint = { rgb: hexRGB(pos[0] || "#000"), a: pos[1] !== undefined ? num(pos[1], "сила") : 0.3 };
+      else if (c === "vignette") need().vignette = pos[0] !== undefined ? num(pos[0], "сила") : 0.5;
+      else if (c === "light") { const s = need(); const [x, y, i] = xy(pos, 0, s);
+        s.lights.push({ x, y, r: pos[i] !== undefined ? num(pos[i], "радиус") : 60, rgb: hexRGB(kw.color || "#ffe2a0"), power: opt("power", 0.6), flicker: opt("flicker", 0), strobe: opt("strobe", 0), seed: li }); }
+      else if (c === "anim") { const s = need(); (s.anims[pos[0]] ||= {})[pos[1]] = { fps: kw.fps ? num(kw.fps, "fps") : null, loop: kw.loop !== undefined ? yes("loop", true) : null }; }
+      else if (c === "actor") {
+        const s = need(); const anchor = kw.anchor ? kw.anchor.split(",").map(Number) : null;
+        if (kw.parent && !s.actors[kw.parent]) throw new Error(`родитель «${kw.parent}» должен быть объявлен выше`);
+        s.actors[pos[0]] = { name: pos[0], sprite: pos[1] || pos[0], x: opt("x", 0), y: opt("y", 0), parent: kw.parent || null,
+          layer: kw.layer !== undefined ? num(kw.layer, "layer") : Math.max(0, s.layers.length - 1), anchor, fps: opt("fps", 8),
+          shadow: yes("shadow", false), blink: yes("blink", true), behind: yes("behind", false), ev: [], seed: hashStr(pos[0]) };
+      }
+      else if (c === "panel") { const s = need(); const t = num(pos[1], "с"); s.panels.push({ t, name: pos[0], from: t, to: num(pos[2], "до"), side: kw.side || "right" });
+        if (!["right", "left", "top", "bottom", "diag"].includes(kw.side || "right")) throw new Error("side: right left top bottom diag");
+        P.ticks.push({ shot: s, t, line: li, kind: "panel", panelLine: true }); }
+      else if (c === "cam") {
+        const s = need(); const t = num(pos[0], "время"); const [x, y, i] = xy(pos, 1, s);
+        s.cams.push([t, [x, y, pos[i] !== undefined ? num(pos[i], "зум") : 1, pos[i + 1] !== undefined ? num(pos[i + 1], "наклон") * Math.PI / 180 : 0]]);
+        P.ticks.push({ shot: s, t, line: li, kind: "cam" });
+      }
+      else if (c === "at") {
+        const s = need(); const t = num(pos[0], "время"); const who = pos[1]; let kind = "act";
+        if (who === "text") { kind = "text"; s.texts.push({ t, s: pos[2] ?? "", x: num(pos[3], "x"), y: num(pos[4], "y"), size: opt("size", 24),
+          dur: opt("dur", 1.5), color: kw.color || "#ffd63c", shadow: kw.shadow || "#d63a3a" }); }
+        else if (who === "say") { kind = "say"; const tl = kw.tail ? kw.tail.split(",").map(Number) : null;
+          if (kw.who && !s.actors[kw.who]) throw new Error(`who=${kw.who}: нет такого актёра`);
+          const voice = kw.voice || (kw.who ? "mid" : "none"); if (voice !== "none" && !VOICES[voice]) throw new Error(`voice: low mid high robot none`);
+          s.says.push({ t, s: pos[2] ?? "", x: num(pos[3], "x"), y: num(pos[4], "y"), dur: opt("dur", 2), tail: tl, size: opt("size", 10),
+            who: kw.who || null, voice, speed: opt("speed", 28) }); }
+        else if (who === "sub") { kind = "say"; s.subs.push({ t, s: pos[2] ?? "", dur: opt("dur", 2) }); }
+        else if (who === "sound") { kind = "sound"; s.sounds.push({ t, name: pos[2], vol: opt("vol", 1) }); }
+        else if (who === "shake") s.shakes.push({ t, p: pos[2] ? num(pos[2], "сила") : 4, dur: opt("dur", 0.4) });
+        else if (who === "flash") s.flashes.push({ t, dur: opt("dur", 0.12) });
+        else if (who === "focus") { s.focus.push({ t, layer: num(pos[2], "слой"), amount: opt("amount", 4), dur: opt("dur", 0.4) }); }
+        else if (who === "fx") { kind = "fx"; if (!FX_TYPES.includes(pos[2])) throw new Error(`эффекты: ${FX_TYPES.join(" ")}`);
+          const [x, y] = xy(pos, 3, s);
+          s.fx.push({ t, type: pos[2], x, y, n: opt("n", 0), dur: opt("dur", ["steam", "smoke"].includes(pos[2]) ? 2 : 0), layer: kw.layer !== undefined ? num(kw.layer, "layer") : null,
+            color: kw.color || null, seed: li * 7 + 1 }); }
+        else if (who === "panel") { kind = "panel"; s.panels.push({ t, name: pos[2], from: t, to: num(pos[3], "до"), side: kw.side || "right", line: li }); }
+        else {
+          const a = s.actors[who]; if (!a) throw new Error(`неизвестный актёр «${who}» — объяви его строкой actor выше`);
+          const cmd = pos[2]; const ar = pos.slice(3); let e;
+          const ease = () => { const e = kw.ease || "inout"; if (!EASE[e]) throw new Error(`ease бывает: ${Object.keys(EASE).join(" ")}`); return e; };
+          if (cmd === "play") e = { anim: ar[0] };
+          else if (cmd === "move") { const [x, y, i] = xy(ar, 0, s); e = { x, y, dur: ar[i] !== undefined ? num(ar[i], "длительность") : 0.5, ease: ease(), arc: opt("arc", 0) }; }
+          else if (cmd === "jump") e = { h: ar[0] ? num(ar[0], "высота") : 10, dur: opt("dur", 0.3), squash: yes("squash", true) };
+          else if (cmd === "rotate") e = { deg: num(ar[0], "угол"), dur: ar[1] !== undefined ? num(ar[1], "длительность") : 0.3, ease: ease() };
+          else if (cmd === "scale") e = { s: num(ar[0], "масштаб"), dur: ar[1] !== undefined ? num(ar[1], "длительность") : 0.3, ease: ease() };
+          else if (cmd === "wobble") { e = { amp: opt("amp", 8), axis: kw.axis || "rot", freq: opt("freq", 7), decay: opt("decay", 5) };
+            if (!["rot", "x", "y", "scale"].includes(e.axis)) throw new Error("axis: rot x y scale"); }
+          else if (cmd === "squash") e = { a: ar[0] !== undefined ? num(ar[0], "сила") : 0.25, dur: opt("dur", 0.4) };
+          else if (cmd === "face") e = { dir: ar[0] };
+          else if (cmd === "talk") { e = { name: ar[0], vol: opt("vol", 1) }; s.talks.push({ t, actor: who, name: ar[0], vol: e.vol }); if (kw.sub) s.subs.push({ t, s: kw.sub, dur: null, talk: ar[0] }); }
+          else if (cmd === "swing") { e = { amp: opt("amp", 20), freq: opt("freq", 1.5), dur: opt("dur", 2), axis: kw.axis || "rot" }; if (!["rot", "x", "y"].includes(e.axis)) throw new Error("swing axis: rot x y"); }
+          else if (cmd === "hide" || cmd === "show") e = {};
+          else throw new Error(`команды актёра: play move jump rotate scale wobble swing squash face talk hide show — «${cmd}» нет`);
+          e.t = t; e.cmd = cmd; a.ev.push(e);
+        }
+        P.ticks.push({ shot: s, t, line: li, kind });
+      }
+      else throw new Error(`неизвестная команда «${c}»`);
+    } catch (e) { P.errs.push(`строка ${li + 1}: ${e.message}\n  > ${raw.trim()}`); }
+  });
+  const nLines = src.split("\n").length;
+  P.all.forEach((s, k) => { s.endLine = k + 1 < P.all.length ? P.all[k + 1].line - 1 : nLines - 1; });
+  P.shots = P.all.filter(s => !s.hidden);
+  if (!P.shots.length) P.errs.push("нет ни одного плана — начни со строки: shot 5");
+  const byName = {}; P.all.forEach(s => { if (s.name) byName[s.name] = s; }); P.byName = byName;
+  for (const s of P.all) {
+    if (!s.cams.length) s.cams.push([0, [s.size[0] / 2, s.size[1] / 2, 1, 0]]);
+    s.cams.sort((a, b) => a[0] - b[0]); s.focus.sort((a, b) => a.t - b.t);
+    for (const a of Object.values(s.actors)) a.ev.sort((p, q) => p.t - q.t);
+    s.children = {}; for (const a of Object.values(s.actors)) if (a.parent) (s.children[a.parent] ||= []).push(a);
+    for (const L of s.layers) if (!assets.has(L.file)) P.errs.push(`нет файла слоя «${L.file}» (загрузи во вкладке Файлы)`);
+    for (const a of Object.values(s.actors)) if (!spriteAnims(a.sprite).size) P.errs.push(`нет картинок для «${a.sprite}» — нужны файлы ${a.sprite}-анимация-кадры.png`);
+    for (const so of [...s.sounds, ...s.talks]) if (!(so.name || "").startsWith("@") && !assets.has(so.name)) P.errs.push(`нет звука «${so.name}»`);
+    for (const p of s.panels) { p.shot = byName[p.name]; if (!p.shot) P.errs.push(`panel: нет плана с name=${p.name}`); }
+  }
+  if (P.music) { const n = P.music.name || ""; if (n[0] === "@") { if (!MUSIC_STYLES.includes(n.slice(1))) P.errs.push(`встроенная музыка: ${MUSIC_STYLES.map(s => "@" + s).join(" ")}`); }
+    else if (!assets.has(n)) P.errs.push(`нет музыки «${n}»`); }
+  return P;
+}
+
+// ================================================================ actors
+function animAt(ev, t, key, base) { // анимированное свойство: rotate/scale
+  let v = base;
+  for (const e of ev) { if (e.t > t) break; if (e.cmd !== key) continue;
+    const tgt = key === "rotate" ? e.deg : e.s; const u = e.dur > 0 ? EASE[e.ease](clamp((t - e.t) / e.dur)) : 1; v = lerp(v, tgt, u); }
+  return v;
+}
+function actorState(a, t) {
+  let x = a.x, y = a.y, anim = null, at = 0, flip = false, vis = true, bob = 0, rot = 0, sx = 1, sy = 1, ox = 0, oy = 0, groundY;
+  for (const e of a.ev) {
+    if (e.t > t) break; const lt = t - e.t;
+    if (e.cmd === "play") { anim = e.anim; at = e.t; }
+    else if (e.cmd === "move") { const u = e.dur > 0 ? EASE[e.ease](clamp(lt / e.dur)) : 1; x = lerp(x, e.x, u); y = lerp(y, e.y, u);
+      if (e.arc && lt < e.dur) bob -= Math.sin(Math.PI * clamp(lt / e.dur)) * e.arc; }
+    else if (e.cmd === "jump") { const u = clamp(lt / e.dur); bob -= Math.sin(u * Math.PI) * e.h;
+      if (e.squash && lt > e.dur) { const k = lt - e.dur, f = Math.exp(-k * 9) * Math.cos(k * 30) * 0.18; sy *= 1 - f; sx *= 1 + f; }
+      if (lt < e.dur) { const f = Math.sin(u * Math.PI) * 0.08; sy *= 1 + f; sx *= 1 - f; } }
+    else if (e.cmd === "wobble") { const k = Math.exp(-lt * e.decay) * Math.sin(TAU * e.freq * lt) * e.amp;
+      if (Math.abs(k) > 0.001) { if (e.axis === "rot") rot += k * Math.PI / 180; else if (e.axis === "x") ox += k; else if (e.axis === "y") oy += k; else { sx *= 1 + k / 100; sy *= 1 + k / 100; } } }
+    else if (e.cmd === "swing") { if (lt < e.dur) { const rp = Math.min(1, lt / 0.15, (e.dur - lt) / 0.15); const k = Math.sin(TAU * e.freq * lt) * e.amp * rp;
+      if (e.axis === "rot") rot += k * Math.PI / 180; else if (e.axis === "x") ox += k; else oy += k; } }
+    else if (e.cmd === "squash") { if (lt < e.dur * 3) { const f = e.a * Math.exp(-lt / e.dur * 3) * Math.cos(lt / e.dur * 9); sy *= 1 - f; sx *= 1 + f; } }
+    else if (e.cmd === "face") flip = e.dir === "left";
+    else if (e.cmd === "hide") vis = false;
+    else if (e.cmd === "show") vis = true;
+  }
+  rot += animAt(a.ev, t, "rotate", 0) * Math.PI / 180; const sc = animAt(a.ev, t, "scale", 1);
+  return { x: x + ox, y: y + bob + oy, gy: y, bob, anim, lt: t - at, flip, vis, rot, sx: sx * sc, sy: sy * sc };
+}
+function mouthLevel(sh, a, t) {  // 0..1 насколько открыт рот, null — не говорит
+  for (const s of sh.says) if (s.who === a.name && s.voice !== "none") {
+    const lt = t - s.t, chars = [...s.s], i = Math.floor(lt * s.speed);
+    if (lt >= 0 && i < chars.length) { const ch = chars[i]; if (/[\s.,!?…\-—:;]/.test(ch)) return 0;
+      const ph = (lt * s.speed) % 1; const op = /[аеёиоуыэюяaeiouy]/i.test(ch) ? 1 : 0.55; return op * Math.sin(Math.PI * ph); }
+  }
+  for (const k of sh.talks) if (k.actor === a.name) { const b = sndBuf(k.name); if (!b) continue; const lt = t - k.t;
+    if (lt >= 0 && lt < b.duration) { const env = envelope(b); return clamp(Math.pow(env[Math.min(env.length - 1, Math.floor(lt * 60))] || 0, 0.6) * 1.2); } }
+  return null;
+}
+function blinking(a, t) { const r = rng(a.seed); let tt = 1 + r() * 2; while (tt < t + 1) { if (t >= tt && t < tt + 0.12) return true; tt += 2.2 + r() * 2.8; } return false; }
+function drawActor(c, sh, a, t) {
+  const st = actorState(a, t); if (!st.vis) return;
+  const anims = spriteAnims(a.sprite); if (!anims.size) return;
+  const cfgOf = n => (sh.anims[a.sprite] || {})[n] || {};
+  const lvl = mouthLevel(sh, a, t);
+  let name = st.anim && anims.has(st.anim) ? st.anim : (anims.has("idle") ? "idle" : [...anims.keys()].find(k => k !== "blink") || anims.keys().next().value);
+  let fi;
+  if (lvl !== null && anims.has("talk")) { name = "talk"; const n = anims.get("talk").n; fi = Math.round(lvl * (n - 1)); }
+  const A = anims.get(name); const cfg = cfgOf(name);
+  const fps = cfg.fps || a.fps, loop = cfg.loop == null ? true : cfg.loop;
+  const fw = Math.floor(A.img.width / A.n), fh = A.img.height;
+  if (fi === undefined) { fi = Math.floor(st.lt * fps); fi = loop ? fi % A.n : Math.min(fi, A.n - 1); }
+  const [ax, ay] = a.anchor || [fw / 2, fh];
+  if (a.shadow && !a.parent) { const k = clamp(1 + st.bob / 40, 0.4, 1); c.save(); c.fillStyle = "rgba(0,0,0,.28)";
+    c.beginPath(); c.ellipse(Math.round(st.x), Math.round(st.gy), fw * 0.38 * k, 3 * k, 0, 0, TAU); c.fill(); c.restore(); }
+  c.save(); c.translate(Math.round(st.x), Math.round(st.y)); c.rotate(st.rot); c.scale((st.flip ? -1 : 1) * st.sx, st.sy);
+  for (const ch of (sh.children[a.name] || []).filter(x => x.behind)) drawActor(c, sh, ch, t);
+  c.drawImage(A.img, fi * fw, 0, fw, fh, -Math.round(ax), -Math.round(ay), fw, fh);
+  if (a.blink && anims.has("blink") && blinking(a, t)) { const B = anims.get("blink"); const bw = Math.floor(B.img.width / B.n);
+    c.drawImage(B.img, 0, 0, bw, B.img.height, -Math.round(ax), -Math.round(ay), bw, B.img.height); }
+  for (const ch of (sh.children[a.name] || []).filter(x => !x.behind)) drawActor(c, sh, ch, t);
+  c.restore();
+}
+
+// ================================================================ particles (без состояния: позиция считается формулой)
+function drawFx(c, f, t) {
+  const lt = t - f.t; if (lt < 0) return;
+  const r = rng(f.seed); const cont = f.dur > 0;
+  const life = { dust: .7, stars: .8, sweat: .7, steam: 1.4, sparks: .45, paper: 2.4, smoke: 1.8, confetti: 1.8 }[f.type];
+  const total = cont ? f.dur + life : life; if (lt > total) return;
+  const n = f.n || (cont ? Math.ceil(f.dur * 8) : { dust: 10, stars: 8, sweat: 4, sparks: 14, paper: 8, confetti: 24 }[f.type] || 10);
+  for (let i = 0; i < n; i++) {
+    const birth = cont ? (i / n) * f.dur : r() * 0.04; const a = r() * TAU, sp = r(), r3 = r(), r4 = r();
+    const pt = lt - birth; if (pt < 0 || pt > life) continue; const u = pt / life;
+    let x = f.x, y = f.y, size = 2, col = f.color, alpha = 1, rot = 0, shape = "rect";
+    switch (f.type) {
+      case "dust": { const dir = r3 < .5 ? -1 : 1; x += dir * (8 + sp * 26) * EASE.out(u); y -= (2 + sp * 8) * EASE.out(u); size = 2 + u * 5; col ||= "#c8bfae"; alpha = (1 - u) * .8; shape = "circle"; break; }
+      case "stars": { const d = (14 + sp * 22) * EASE.out(u); x += Math.cos(a) * d; y += Math.sin(a) * d - 4; size = 4 * (1 - u * .5); col ||= "#ffe14d"; rot = pt * 8; shape = "star"; alpha = 1 - u * u; break; }
+      case "sweat": { const vx = (r3 - .5) * 40, vy = -30 - sp * 20; x += vx * pt; y += vy * pt + 120 * pt * pt; size = 2; col ||= "#8fd8ff"; shape = "drop"; alpha = 1 - u; break; }
+      case "steam": { x += Math.sin(pt * 4 + i) * 3 + (r3 - .5) * 4; y -= pt * 18; size = 2 + u * 4; col ||= "#e8e8f4"; alpha = (1 - u) * .5; shape = "circle"; break; }
+      case "sparks": { const d = (20 + sp * 40) * EASE.out(u); x += Math.cos(a) * d; y += Math.sin(a) * d + 30 * pt * pt; col ||= r3 < .5 ? "#fff6c0" : "#ffb23c"; shape = "line"; size = 4 * (1 - u); rot = a; alpha = 1 - u; break; }
+      case "paper": { const up = Math.min(pt, .35); x += (r3 - .5) * 70 * up + Math.sin(pt * 3 + i) * 10 * (pt - up); y += -60 * up * (1 - up) * 3 + 14 * Math.max(0, pt - up); size = 4; col ||= "#faf8f0"; rot = Math.sin(pt * 5 + i) * 1.2; alpha = 1 - Math.max(0, u - .7) / .3; break; }
+      case "smoke": { x += Math.sin(pt * 2 + i) * 4 + (r3 - .5) * 8 * u; y -= pt * 12; size = 3 + u * 8; col ||= "#6f6a7e"; alpha = (1 - u) * .55; shape = "circle"; break; }
+      case "confetti": { const vx = Math.cos(a) * (60 + sp * 90), vy = -80 - sp * 70; const k = Math.min(pt, .4);
+        x += vx * k + Math.sin(pt * 6 + i) * 6 * Math.max(0, pt - .4); y += vy * k + 200 * k * k + 18 * Math.max(0, pt - .4); size = 4;
+        col ||= ["#ff5a5a", "#ffd63c", "#5ad1ff", "#7dff8a", "#d07dff"][i % 5]; rot = pt * 9 + i; alpha = 1 - Math.max(0, u - .8) / .2; break; }
+    }
+    c.save(); c.globalAlpha *= clamp(alpha); c.fillStyle = col; c.strokeStyle = col; c.translate(Math.round(x), Math.round(y)); c.rotate(rot);
+    const s = Math.max(1, Math.round(size));
+    if (shape === "circle") { c.beginPath(); c.arc(0, 0, s, 0, TAU); c.fill(); }
+    else if (shape === "star") { c.fillRect(-s / 2, -.5, s, 1.5); c.fillRect(-.5, -s / 2, 1.5, s); c.fillRect(-1, -1, 2, 2); }
+    else if (shape === "drop") { c.beginPath(); c.moveTo(0, -3); c.lineTo(1.6, 1); c.arc(0, 1, 1.6, 0, Math.PI); c.closePath(); c.fill(); }
+    else if (shape === "line") { c.fillRect(-s, -.5, s * 2, 1.5); }
+    else c.fillRect(-s / 2, -s / 3, s, s * .66);
+    c.restore();
+  }
+}
+
+// ================================================================ renderer
+const cv = $("#cv"); const ctx = cv.getContext("2d");
+let PROJ = { shots: [], all: [], total: 0, ticks: [] };
+let MB_ON = true, MB_MAX = 4;
+const FILTER_OK = (() => { try { const c = document.createElement("canvas"); c.width = c.height = 9; const g = c.getContext("2d");
+  if (!("filter" in g)) return false; g.filter = "blur(2px)"; g.fillStyle = "#fff"; g.fillRect(4, 4, 1, 1); return g.getImageData(1, 4, 1, 1).data[3] > 0; } catch (e) { return false; } })();
+
+function camera(sh, t, raw) {
+  let [x, y, z, r] = (!raw && CAMO && PROJ.shots[CAMO.i] === sh) ? [CAMO.x, CAMO.y, CAMO.z, CAMO.r] : spline(sh.cams, t);
+  for (const k of sh.shakes) if (t >= k.t && t < k.t + k.dur) { const e = 1 - (t - k.t) / k.dur; x += Math.sin(t * 97) * k.p * e / z; y += Math.cos(t * 83) * k.p * e / z; }
+  return [x, y, z, r];
+}
+function setCam(c, sh, cam, p, W, H) {
+  const [cx, cy, z, r] = cam; const S = W / sh.size[0];
+  const C0x = sh.size[0] / 2, C0y = sh.size[1] / 2;
+  const zl = Math.pow(z, p), lx = C0x + (cx - C0x) * p, ly = C0y + (cy - C0y) * p;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.translate(W / 2, H / 2); c.rotate(r); c.scale(S * zl, S * zl); c.translate(-lx, -ly);
+}
+function focusBlur(sh, i, t) {
+  if (!sh.focus.length) return 0; const L = sh.layers[i] || { p: 1 };
+  const val = f => f ? f.amount * Math.abs(L.p - ((sh.layers[f.layer] || { p: 1 }).p)) * 2.2 : 0;
+  let prev = null, v = 0;
+  for (const f of sh.focus) { if (f.t > t) break; const u = EASE.inout(clamp((t - f.t) / f.dur)); v = lerp(val(prev), val(f), u); prev = f; }
+  return v;
+}
+// сцена без экранного слоя: слои, актёры, частицы, свет
+function drawScene(c, sh, t, W, H) {
+  c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false; c.globalAlpha = 1;
+  c.fillStyle = "#14121e"; c.fillRect(0, 0, W, H);
+  const cam = camera(sh, t);
+  const byL = {}; for (const a of Object.values(sh.actors)) if (!a.parent) (byL[a.layer] ||= []).push(a);
+  const fxL = {}; for (const f of sh.fx) { const L = f.layer ?? Math.max(0, Math.min(sh.layers.length - 1, Math.max(0, ...Object.values(sh.actors).map(a => a.layer)))); (fxL[L] ||= []).push(f); }
+  const nL = Math.max(sh.layers.length, 1);
+  for (let i = 0; i < nL; i++) {
+    const L = sh.layers[i] || { p: 1, blur: 0 };
+    const blur = (L.blur || 0) + focusBlur(sh, i, t);
+    const pass = g => {
+      setCam(g, sh, cam, L.p, W, H); g.imageSmoothingEnabled = false;
+      const asset = L.file && assets.get(L.file); if (asset && asset.img) g.drawImage(asset.img, 0, 0);
+      (byL[i] || []).map(a => [a, actorState(a, t).y]).sort((p, q) => p[1] - q[1]).forEach(([a]) => drawActor(g, sh, a, t));
+      (fxL[i] || []).forEach(f => drawFx(g, f, t));
+    };
+    if (blur > 0.3) {
+      const px = blur * W / 540;
+      if (FILTER_OK) { const b = getBuf(W, H); pass(b._ctx); c.setTransform(1, 0, 0, 1, 0, 0); c.filter = `blur(${px}px)`; c.drawImage(b, 0, 0); c.filter = "none"; relBuf(b); }
+      else { const b = getBuf(W, H); pass(b._ctx); const f = 1 + px / 1.2; const s = getBuf(Math.max(1, Math.round(W / f)), Math.max(1, Math.round(H / f)));
+        s._ctx.imageSmoothingEnabled = true; s._ctx.drawImage(b, 0, 0, s.width, s.height); c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = true; c.drawImage(s, 0, 0, W, H); c.imageSmoothingEnabled = false; relBuf(s); relBuf(b); }
+    } else { c.save(); pass(c); c.restore(); }
+  }
+  if (sh.weather) drawWeather(c, sh, t, W, H);
+  // цветной фильтр, свет, виньетка — в низком разрешении, чтобы были «пиксельные»
+  if (sh.tint) { c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = "multiply"; const [r, g, b] = sh.tint.rgb;
+    c.fillStyle = `rgb(${lerp(255, r, sh.tint.a)},${lerp(255, g, sh.tint.a)},${lerp(255, b, sh.tint.a)})`; c.fillRect(0, 0, W, H); c.globalCompositeOperation = "source-over"; }
+  if (sh.lights.length) {
+    const [sw, shh] = sh.size; const lb = getBuf(sw, shh); const g = lb._ctx; g.clearRect(0, 0, sw, shh);
+    setCam(g, sh, cam, 1, sw, shh);
+    for (const l of sh.lights) { let fl = l.flicker ? 1 - l.flicker * (0.5 + 0.5 * Math.sin(t * 23 + l.seed) * Math.sin(t * 7.3 + l.seed * 3)) : 1;
+      if (l.strobe && rng(l.seed * 977 + Math.floor(t * 12))() < l.strobe) fl *= 0.08;
+      const gr = g.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r); const [r, gg, b] = l.rgb;
+      gr.addColorStop(0, `rgba(${r},${gg},${b},${l.power * fl})`); gr.addColorStop(.5, `rgba(${r},${gg},${b},${l.power * fl * .35})`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+      g.fillStyle = gr; g.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2); }
+    c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = "screen"; c.imageSmoothingEnabled = false; c.drawImage(lb, 0, 0, W, H); c.globalCompositeOperation = "source-over"; relBuf(lb);
+  }
+  if (sh.vignette) { c.setTransform(1, 0, 0, 1, 0, 0); const gr = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.hypot(W, H) * .55);
+    gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(1, `rgba(0,0,0,${sh.vignette})`); c.fillStyle = gr; c.fillRect(0, 0, W, H); }
+}
+function frameSpeed(sh, t, W) {  // насколько сильно всё сдвинулось за 1/60 с (пиксели экрана)
+  const dt = 1 / 60, S = W / sh.size[0];
+  const a = camera(sh, t), b = camera(sh, Math.max(0, t - dt));
+  let sp = Math.hypot(a[0] - b[0], a[1] - b[1]) * S * a[2] + Math.abs(a[2] - b[2]) / a[2] * W * .6 + Math.abs(a[3] - b[3]) * W * .6;
+  for (const ac of Object.values(sh.actors)) { const p = actorState(ac, t), q = actorState(ac, Math.max(0, t - dt));
+    sp = Math.max(sp, Math.hypot(p.x - q.x, p.y - q.y) * S * a[2] * .8, Math.abs(p.rot - q.rot) * 40 * S); }
+  return sp;
+}
+function drawSceneMB(c, sh, t, W, H) {
+  const K = MB_ON ? Math.min(MB_MAX, 1 + Math.floor(frameSpeed(sh, t, W) / (W / 60))) : 1;
+  if (K <= 1) { drawScene(c, sh, t, W, H); return; }
+  drawScene(c, sh, t, W, H);
+  const b = getBuf(W, H); const shutter = 0.5 / 60;
+  for (let i = 1; i < K; i++) { drawScene(b._ctx, sh, Math.max(0, t - shutter * i / (K - 1)), W, H);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1 / (i + 1); c.drawImage(b, 0, 0); c.globalAlpha = 1; }
+  relBuf(b);
+}
+// панели (раздельный экран)
+function panelPoly(side, W, H, u) {
+  const off = 1 - EASE.out(u);
+  if (side === "left") return [[0 - W * .55 * off, 0], [W * .48 - W * .55 * off, 0], [W * .48 - W * .55 * off, H], [0 - W * .55 * off, H]];
+  if (side === "top") return [[0, -H * .5 * off], [W, -H * .5 * off], [W, H * .46 - H * .5 * off], [0, H * .46 - H * .5 * off]];
+  if (side === "bottom") return [[0, H * .54 + H * .5 * off], [W, H * .54 + H * .5 * off], [W, H + H * .5 * off], [0, H + H * .5 * off]];
+  if (side === "diag") return [[W * .62 + W * .7 * off, 0], [W * 1.2 + W * .7 * off, 0], [W * 1.2 + W * .7 * off, H], [W * .32 + W * .7 * off, H]];
+  return [[W * .52 + W * .55 * off, 0], [W + W * .55 * off, 0], [W + W * .55 * off, H], [W * .52 + W * .55 * off, H]];
+}
+function drawPanels(c, sh, t, W, H) {
+  for (const p of sh.panels) {
+    if (!p.shot || t < p.from || t > p.to) continue;
+    const u = Math.min(clamp((t - p.from) / 0.3), clamp((p.to - t) / 0.3));
+    const poly = panelPoly(p.side, W, H, u);
+    const b = getBuf(W, H); renderShotFull(b._ctx, p.shot, clamp(t - p.from, 0, p.shot.dur - 1e-4), W, H);
+    const pcx = poly.reduce((a, [x]) => a + clamp(x, 0, W), 0) / 4, pcy = poly.reduce((a, [, y]) => a + clamp(y, 0, H), 0) / 4;
+    const lw = W / 70;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    // белое поле + чёрная рамка, как в комиксе
+    c.save(); c.beginPath(); poly.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath();
+    c.lineWidth = lw * 3; c.strokeStyle = "#faf8f0"; c.stroke(); c.clip(); c.drawImage(b, pcx - W / 2, pcy - H / 2); c.restore();
+    c.beginPath(); poly.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); c.lineWidth = lw; c.strokeStyle = INK; c.stroke();
+    relBuf(b);
+  }
+}
+const ov = document.createElement("canvas"); const octx = ov.getContext("2d");
+function drawOverlay(c, sh, t, W, H) {
+  const [sw, shh] = sh.size; const o = getBuf(sw, shh); const g = o._ctx; g.clearRect(0, 0, sw, shh);
+  sh.says.forEach(b => { const lt = t - b.t; if (lt >= 0 && lt < b.dur) drawSay(g, b, lt); });
+  sh.texts.forEach((x, k) => { const lt = t - x.t; if (lt >= 0 && lt < x.dur) wordFx(g, x, lt, k + 1); });
+  sh.subs.forEach(s => { const d = s.dur ?? ((sndBuf(s.talk) || {}).duration || 2); const lt = t - s.t; if (lt >= 0 && lt < d) drawSub(g, s, sw, shh, lt, d); });
+  c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false; c.drawImage(o, 0, 0, W, H); relBuf(o);
+  for (const f of sh.flashes) if (t >= f.t && t < f.t + f.dur) { c.fillStyle = `rgba(255,255,255,${0.8 * (1 - (t - f.t) / f.dur)})`; c.fillRect(0, 0, W, H); }
+}
+function renderShotFull(c, sh, t, W, H) { drawSceneMB(c, sh, t, W, H); drawPanels(c, sh, t, W, H); drawOverlay(c, sh, t, W, H); }
+
+function drawSub(c, s, sw, shh, lt, d) {
+  c.font = "700 11px -apple-system,system-ui,sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
+  const lines = wrap(c, s.s, sw * 0.72); const a = clamp(lt / 0.1) * clamp((d - lt) / 0.1);
+  c.save(); c.globalAlpha = a; c.lineJoin = "round"; c.lineWidth = 3; c.strokeStyle = INK; c.fillStyle = "#fff";
+  lines.forEach((l, i) => { const y = shh * 0.74 - (lines.length - 1 - i) * 13; c.strokeText(l, sw * 0.46, y); c.fillText(l, sw * 0.46, y); });
+  c.restore();
+}
+function drawWeather(c, sh, t, W, H) {
+  const w = sh.weather, [sw, shh] = sh.size, S = W / sw; const r = rng(77);
+  c.save(); c.setTransform(S, 0, 0, S, 0, 0); c.imageSmoothingEnabled = false;
+  if (w.type === "rain") {
+    const n = Math.round(90 * w.amount); c.strokeStyle = "rgba(170,195,255,.55)"; c.lineWidth = 1; c.beginPath();
+    for (let i = 0; i < n; i++) { const x0 = r() * (sw + 60), y0 = r() * shh, v = 260 + r() * 140; const y = (y0 + t * v) % (shh + 20) - 10;
+      const x = ((x0 + w.wind * (y + t * v * 0.3)) % (sw + 60) + sw + 60) % (sw + 60) - 30;
+      c.moveTo(Math.round(x) + .5, Math.round(y)); c.lineTo(Math.round(x + w.wind * 5) + .5, Math.round(y + 6)); }
+    c.stroke();
+  } else if (w.type === "snow") {
+    const n = Math.round(70 * w.amount); c.fillStyle = "rgba(245,248,255,.9)";
+    for (let i = 0; i < n; i++) { const x0 = r() * sw, y0 = r() * shh, v = 18 + r() * 26, sz = r() < .3 ? 2 : 1; const y = (y0 + t * v) % (shh + 10) - 5;
+      const x = ((x0 + Math.sin(t * 1.3 + i) * 6 + w.wind * t * 25) % sw + sw) % sw; c.fillRect(Math.round(x), Math.round(y), sz, sz); }
+  } else {
+    const n = Math.round(40 * w.amount);
+    for (let i = 0; i < n; i++) { const x0 = r() * sw, y0 = r() * shh, ph = r() * TAU;
+      const x = ((x0 + Math.sin(t * .4 + ph) * 10 + w.wind * t * 6) % sw + sw) % sw, y = ((y0 + Math.cos(t * .3 + ph) * 8 - t * 2) % shh + shh) % shh;
+      c.fillStyle = `rgba(255,230,170,${.25 + .35 * (0.5 + 0.5 * Math.sin(t * 2 + ph))})`; c.fillRect(Math.round(x), Math.round(y), 1, 1); }
+  }
+  c.restore();
+}
+
+const INK = "#1a1423";
+function wordFx(c, x, lt, seed) {
+  const r = rng(seed); c.font = `900 ${x.size}px -apple-system,system-ui,sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
+  const chars = [...x.s]; const ws = chars.map(ch => c.measureText(ch).width); const total = ws.reduce((a, b) => a + b, 0);
+  let px = x.x - total / 2; const fade = clamp((x.dur - lt) / 0.15);
+  chars.forEach((ch, i) => {
+    const u = lt - i * 0.04; const rot = (r() - .5) * .6, dy = (r() - .5) * 8;
+    if (u > 0 && ch !== " ") {
+      const sc = EASE.back(clamp(u / 0.18)) * fade;
+      c.save(); c.translate(px + ws[i] / 2, x.y + dy); c.rotate(rot + Math.sin(u * 15 + i) * .06); c.scale(sc, sc);
+      c.lineJoin = "round"; c.lineWidth = Math.max(2, x.size / 8); c.strokeStyle = INK;
+      c.fillStyle = x.shadow; c.strokeText(ch, 2, 2); c.fillText(ch, 2, 2);
+      c.strokeText(ch, 0, 0); c.fillStyle = x.color; c.fillText(ch, 0, 0);
+      c.restore();
+    }
+    px += ws[i];
+  });
+}
+function wrap(c, s, maxW) { const out = []; let line = "";
+  for (const w of s.split(" ")) { const tt = line ? line + " " + w : w; if (c.measureText(tt).width > maxW && line) { out.push(line); line = w; } else line = tt; }
+  if (line) out.push(line); return out; }
+function drawSay(c, b, lt) {
+  const sc = EASE.back(clamp(lt / 0.15)) * clamp((b.dur - lt) / 0.12); if (sc <= 0) return;
+  c.font = `700 ${b.size}px -apple-system,system-ui,sans-serif`; c.textBaseline = "middle";
+  const lines = wrap(c, b.s, 120); const lh = b.size * 1.2;
+  const w = Math.max(...lines.map(l => c.measureText(l).width)) + 14, h = lines.length * lh + 10;
+  const tail = b.tail || [b.x - 6, b.y + h / 2 + 14];
+  c.save(); c.translate(b.x, b.y); c.scale(sc, sc); c.translate(-b.x, -b.y);
+  c.fillStyle = "#faf8f0"; c.strokeStyle = INK; c.lineWidth = 1.5;
+  const bx = b.x - w / 2, by = b.y - h / 2;
+  c.beginPath(); c.moveTo(b.x - 6, b.y + h / 2 - 1); c.lineTo(tail[0], tail[1]); c.lineTo(b.x + 6, b.y + h / 2 - 1); c.closePath(); c.fill(); c.stroke();
+  c.beginPath(); if (c.roundRect) c.roundRect(bx, by, w, h, 7); else c.rect(bx, by, w, h); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(b.x - 5, b.y + h / 2 - 1.5); c.lineTo(b.x + 5, b.y + h / 2 - 1.5); c.lineTo((tail[0] + b.x) / 2, (tail[1] + b.y + h / 2) / 2); c.fill();
+  let left = Math.floor(lt * b.speed); c.fillStyle = INK; c.textAlign = "left";
+  lines.forEach((l, i) => { const vis = [...l].slice(0, Math.max(0, left)).join(""); left -= [...l].length + 1;
+    c.fillText(vis, b.x - c.measureText(l).width / 2, by + 5 + lh * (i + .5)); });
+  c.restore();
+}
+// переходы между планами
+function drawTransition(c, prev, cur, tp, tc, tr, W, H) {
+  const u = clamp(tc / tr.dur); const A = getBuf(W, H), B = getBuf(W, H);
+  renderShotFull(A._ctx, prev, tp, W, H); renderShotFull(B._ctx, cur, tc, W, H);
+  c.setTransform(1, 0, 0, 1, 0, 0); const e = EASE.inout(u);
+  const clipDraw = (path) => { c.save(); c.beginPath(); path(); c.clip(); c.drawImage(B, 0, 0); c.restore(); };
+  switch (tr.type) {
+    case "fade": c.drawImage(B, 0, 0); c.globalAlpha = 1 - e; c.drawImage(A, 0, 0); c.globalAlpha = 1; break;
+    case "white": c.drawImage(u < .5 ? A : B, 0, 0); c.fillStyle = `rgba(255,255,255,${1 - Math.abs(u - .5) * 2})`; c.fillRect(0, 0, W, H); break;
+    case "wipe": c.drawImage(A, 0, 0); clipDraw(() => c.rect(0, 0, W * e, H)); c.fillStyle = INK; c.fillRect(W * e - W / 120, 0, W / 60, H); break;
+    case "diag": { c.drawImage(A, 0, 0); const x = lerp(-W * .5, W * 1.5, e); const poly = [[x - W * .3, 0], [x + W * .3, H]];
+      clipDraw(() => { c.moveTo(-W, 0); c.lineTo(poly[0][0], 0); c.lineTo(poly[1][0], H); c.lineTo(-W, H); c.closePath(); });
+      c.strokeStyle = INK; c.lineWidth = W / 50; c.beginPath(); c.moveTo(poly[0][0], 0); c.lineTo(poly[1][0], H); c.stroke(); break; }
+    case "iris": c.drawImage(A, 0, 0); clipDraw(() => c.arc(W / 2, H / 2, Math.hypot(W, H) * .55 * e, 0, TAU)); break;
+    case "slide": c.drawImage(A, -W * e, 0); c.drawImage(B, W * (1 - e), 0); c.fillStyle = INK; c.fillRect(W * (1 - e) - W / 120, 0, W / 60, H); break;
+    case "zoom": if (u < .5) { const s = 1 + EASE.in(u * 2) * 2; c.drawImage(A, W / 2 - W * s / 2, H / 2 - H * s / 2, W * s, H * s); }
+      else { const s = 1 + (1 - EASE.out((u - .5) * 2)) * .3; c.drawImage(B, W / 2 - W * s / 2, H / 2 - H * s / 2, W * s, H * s); }
+      c.fillStyle = `rgba(255,255,255,${Math.max(0, 1 - Math.abs(u - .5) * 4)})`; c.fillRect(0, 0, W, H); break;
+    default: c.drawImage(B, 0, 0);
+  }
+  relBuf(A); relBuf(B);
+}
+function locate(T) {
+  let acc = 0;
+  for (let i = 0; i < PROJ.shots.length; i++) { const s = PROJ.shots[i]; if (T < acc + s.dur || i === PROJ.shots.length - 1) return [i, Math.min(Math.max(0, T - acc), s.dur - 1e-6), acc]; acc += s.dur; }
+  return [0, 0, 0];
+}
+function render(T) {
+  if (!PROJ.shots.length) return; const [i, t] = locate(T); const sh = PROJ.shots[i]; const W = cv.width, H = cv.height;
+  if (i > 0 && sh.trans && sh.trans.type !== "cut" && t < sh.trans.dur) { const pv = PROJ.shots[i - 1]; drawTransition(ctx, pv, sh, pv.dur - 1e-4, t, sh.trans, W, H); }
+  else renderShotFull(ctx, sh, t, W, H);
+}
+function sizeCanvas(W) { const s = PROJ.shots[0]; const asp = s ? s.size[1] / s.size[0] : 480 / 270; cv.width = W; cv.height = Math.round(W * asp / 2) * 2; }
+
+// ================================================================ playback & sound scheduling
+let playing = false, T = 0, clock0 = 0, srcs = [], raf = 0, onEnd = null, musicGain = null;
+const fmt = t => t.toFixed(2);
+function ui() { $("#tlabel").textContent = `${fmt(T)} / ${fmt(PROJ.total)}`; $("#scrub").value = PROJ.total ? Math.round(T / PROJ.total * 1000) : 0; $("#play").textContent = playing ? "❚❚" : "▶"; drawTimeline(); }
+function allSoundEvents() {  // [{gt, buf, vol, speech}]
+  const out = []; let acc = 0;
+  const addShot = (s, base, limit) => {
+    for (const so of s.sounds) if (so.t < limit) out.push({ gt: base + so.t, buf: sndBuf(so.name), vol: so.vol });
+    for (const k of s.talks) if (k.t < limit) out.push({ gt: base + k.t, buf: sndBuf(k.name), vol: k.vol, speech: true });
+    for (const b of s.says) if (b.voice !== "none" && b.t < limit) out.push({ gt: base + b.t, buf: voiceBuf(b), vol: 0.8, speech: true });
+    for (const p of s.panels) if (p.shot) addShot(p.shot, base + p.from, p.to - p.from);
+  };
+  for (const s of PROJ.shots) { addShot(s, acc, s.dur); acc += s.dur; }
+  return out.filter(e => e.buf);
+}
+function scheduleSounds(from, dest) {
+  const now = actx.currentTime + 0.03; const evs = allSoundEvents();
+  const out = actx.createGain(); out.connect(master); if (dest) out.connect(dest); srcs.push({ stop() { try { out.disconnect(); } catch (e) {} } });
+  for (const e of evs) {
+    if (e.gt + e.buf.duration < from) continue;
+    const src = actx.createBufferSource(); src.buffer = e.buf; const g = actx.createGain(); g.gain.value = e.vol;
+    src.connect(g); g.connect(out); src.start(now + Math.max(0, e.gt - from), Math.max(0, from - e.gt)); srcs.push(src);
+  }
+  const m = PROJ.music; const mb = m && (m.name[0] === "@" ? (MUSIC_STYLES.includes(m.name.slice(1)) ? genMusic(m.name.slice(1), PROJ.bpm || 110) : null) : sndBuf(m.name));
+  if (mb) {
+    musicGain = actx.createGain(); musicGain.gain.value = m.vol;
+    const src = actx.createBufferSource(); src.buffer = mb; src.loop = m.name[0] === "@"; src.connect(musicGain); musicGain.connect(out);
+    const off = m.from + from; if (src.loop || off < mb.duration) { src.start(now, src.loop ? off % mb.duration : off); srcs.push(src); }
+    // приглушение под речь
+    const g = musicGain.gain; g.setValueAtTime(m.vol, now);
+    for (const e of evs.filter(e => e.speech)) {
+      const a = e.gt - from, b = a + e.buf.duration; if (b < 0) continue;
+      g.setTargetAtTime(m.vol * m.duck, now + Math.max(0, a - 0.05), 0.05); g.setTargetAtTime(m.vol, now + Math.max(0, b), 0.15);
+    }
+    const end = PROJ.total - from; g.setTargetAtTime(0, now + Math.max(0, end - 0.4), 0.15);
+  }
+}
+function play(dest) {
+  audio(); if (T >= PROJ.total - 0.01) T = 0;
+  playing = true; clock0 = actx.currentTime + 0.03 - T; scheduleSounds(T, dest);
+  const loop = () => { if (!playing) return; T = actx.currentTime - clock0;
+    if (T >= PROJ.total) { T = PROJ.total; render(T - 1e-4); stop(); if (onEnd) { const f = onEnd; onEnd = null; f(); } ui(); return; }
+    if (camRec) camRecSample();
+    render(Math.max(0, T)); ui(); raf = requestAnimationFrame(loop); };
+  loop();
+}
+function stop() { playing = false; cancelAnimationFrame(raf); srcs.forEach(s => { try { s.stop(); } catch (e) {} }); srcs = []; ui(); }
+$("#play").onclick = () => { playing ? stop() : play(); };
+$("#scrub").oninput = e => { if (playing) stop(); T = e.target.value / 1000 * PROJ.total; render(T); ui(); };
+
+// координаты по тапу
+cv.addEventListener("click", e => {
+  if (!PROJ.shots.length || CAMO) return;
+  const rct = cv.getBoundingClientRect(); const px = (e.clientX - rct.left) / rct.width * cv.width, py = (e.clientY - rct.top) / rct.height * cv.height;
+  const [i, t] = locate(T); const sh = PROJ.shots[i]; const [cx, cy, z, r] = camera(sh, t); const S = cv.width / sh.size[0];
+  const dx = (px - cv.width / 2) / (S * z), dy = (py - cv.height / 2) / (S * z);
+  const wx = cx + dx * Math.cos(-r) - dy * Math.sin(-r), wy = cy + dx * Math.sin(-r) + dy * Math.cos(-r);
+  lastTap = { wx: Math.round(wx), wy: Math.round(wy), sx: Math.round(px / S), sy: Math.round(py / S) };
+  const el = $("#tap"); el.textContent = `мир ${Math.round(wx)} ${Math.round(wy)} · экран ${Math.round(px / S)} ${Math.round(py / S)}`;
+  el.style.display = "block"; clearTimeout(el._t); el._t = setTimeout(() => el.style.display = "none", 3500);
+});
+
+// ================================================================ timeline strip
+const tl = $("#tl"); const tg = tl.getContext("2d");
+const TROWS = { cam: 0, act: 1, sound: 2, say: 3, text: 3, fx: 4, panel: 4 };
+const TCOL = { cam: "#4cc38a", text: "#ffd63c", say: "#ffffff", sound: "#b48cff", act: "#5ab4ff", fx: "#ff9a4c", panel: "#ff6b9a" };
+function shotStart(s) { let acc = 0; for (const x of PROJ.shots) { if (x === s) return acc; acc += x.dur; } return null; }
+function drawTimeline() {
+  const dpr = window.devicePixelRatio || 1; const w = tl.clientWidth, h = tl.clientHeight; if (!w) return;
+  if (tl.width !== Math.round(w * dpr)) { tl.width = Math.round(w * dpr); tl.height = Math.round(h * dpr); }
+  tg.setTransform(dpr, 0, 0, dpr, 0, 0); tg.clearRect(0, 0, w, h); const tot = PROJ.total || 1, X = t => 4 + (w - 8) * t / tot;
+  let acc = 0;
+  PROJ.shots.forEach((s, i) => { tg.fillStyle = i % 2 ? "#1b1828" : "#221e33"; tg.fillRect(X(acc), 0, X(acc + s.dur) - X(acc), 16);
+    tg.fillStyle = "#9a93b3"; tg.font = "10px -apple-system,sans-serif"; tg.fillText(s.name || `план ${i + 1}`, X(acc) + 3, 11);
+    if (s.trans && s.trans.type !== "cut") { tg.fillStyle = "#ffd63c55"; tg.fillRect(X(acc), 0, X(acc + s.trans.dur) - X(acc), 16); }
+    acc += s.dur; });
+  if (PROJ.bpm) { tg.fillStyle = "#ffffff18"; const bt = 60 / PROJ.bpm; for (let b = 0; b * bt < tot; b++) tg.fillRect(X(b * bt), 16, b % 4 ? .5 : 1, h - 16); }
+  for (const k of PROJ.ticks) { const s0 = shotStart(k.shot); if (s0 === null) continue; const x = X(s0 + k.t), y = 20 + TROWS[k.kind] * 8.5;
+    tg.fillStyle = TCOL[k.kind]; tg.fillRect(x - 1.5, y, 3, 6); if (dragTick === k) { tg.strokeStyle = "#fff"; tg.strokeRect(x - 3, y - 2, 6, 10); } }
+  tg.fillStyle = "#e5484d"; tg.fillRect(X(T) - 1, 0, 2, h);
+}
+let dragTick = null, dragMoved = false;
+function tlTime(e) { const r = tl.getBoundingClientRect(); return clamp((e.clientX - r.left - 4) / (r.width - 8)) * (PROJ.total || 1); }
+tl.addEventListener("pointerdown", e => {
+  tl.setPointerCapture(e.pointerId); const r = tl.getBoundingClientRect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+  const tot = PROJ.total || 1, X = t => 4 + (r.width - 8) * t / tot; dragTick = null; dragMoved = false;
+  if (y > 18) { let best = 16; for (const k of PROJ.ticks) { const s0 = shotStart(k.shot); if (s0 === null) continue;
+    const d = Math.abs(X(s0 + k.t) - x) + Math.abs(20 + TROWS[k.kind] * 8.5 + 3 - y) * 1.5; if (d < best) { best = d; dragTick = k; } } }
+  if (!dragTick) { if (playing) stop(); T = tlTime(e); render(T); ui(); }
+});
+tl.addEventListener("pointermove", e => {
+  if (!e.buttons && e.pointerType === "mouse") return;
+  if (dragTick) { const s0 = shotStart(dragTick.shot); let nt = clamp(tlTime(e) - s0, 0, dragTick.shot.dur);
+    if (PROJ.bpm) { const q = 60 / PROJ.bpm / 4; nt = Math.round(nt / q) * q; } else nt = Math.round(nt * 20) / 20;
+    dragTick.t = nt; dragMoved = true; ui(); }
+  else if (e.buttons || e.pointerType !== "mouse") { if (playing) stop(); T = tlTime(e); render(T); ui(); }
+});
+tl.addEventListener("pointerup", () => {
+  if (dragTick && dragMoved) { const lines = $("#script").value.split("\n"); const L = lines[dragTick.line];
+    const v = +dragTick.t.toFixed(3);
+    lines[dragTick.line] = dragTick.panelLine ? L.replace(/^(\s*panel\s+\S+\s+)(-?[\d.]+b?)/, (m, p) => p + v) : L.replace(/^(\s*(?:at|cam)\s+)(-?[\d.]+b?)/, (m, p) => p + v);
+    $("#script").value = lines.join("\n"); T = shotStart(dragTick.shot) + dragTick.t; apply(true); }
+  dragTick = null; drawTimeline();
+});
+window.addEventListener("resize", drawTimeline);
+
+// ================================================================ apply script
+async function apply(silent) {
+  const src = $("#script").value; await dbPut("meta", "script:" + PID, src);
+  spriteCache.clear(); const P = parse(src);
+  $("#err").textContent = P.errs.join("\n\n");
+  if (P.shots.length) {
+    PROJ = { ...P, total: P.shots.reduce((a, s) => a + s.dur, 0) };
+    if (!playing) { sizeCanvas(Math.min(540, PROJ.shots[0].size[0] * 2)); T = Math.min(T, PROJ.total); render(T); }
+  }
+  drawSafe();
+  if (!silent) $("#okmsg").textContent = (P.errs.length ? `ошибок: ${P.errs.length}` : `ок · ${P.shots.length} план(а) · ${fmt(PROJ.total)} с`);
+  ui();
+}
+$("#bApply").onclick = () => { stop(); apply(); };
+
+// ================================================================ files UI
+function fileRow(n, a) {
+  const d = document.createElement("div"); d.className = "file";
+  const th = document.createElement("div"); th.className = "th";
+  if (a.kind === "img") th.style.backgroundImage = `url(${a.url})`; else th.textContent = a.err ? "⚠" : "♪";
+  const nm = document.createElement("div"); nm.className = "nm"; nm.innerHTML = `<div></div><div class="sz"></div>`; nm.firstChild.textContent = n;
+  nm.lastChild.textContent = a.kind === "img" ? `${a.img.width}×${a.img.height}` : (a.err ? "не читается" : a.buf ? `${a.buf.duration.toFixed(2)} с` : "звук");
+  const btn = (txt, fn, cls) => { const b = document.createElement("button"); b.textContent = txt; if (cls) b.className = cls; b.onclick = fn; return b; };
+  const els = [th, nm];
+  if (a.kind === "snd") els.push(btn("▶", async () => { audio(); if (!a.buf) await loadSnd(a); if (!a.buf) return; const s = actx.createBufferSource(); s.buffer = a.buf; s.connect(master); s.start(); }));
+  els.push(btn("✎", async () => { const nn = await dialog("Новое имя файла", n); if (!nn || nn === n) return;
+    await dbPut("files", fkey(nn, a.lib), a.blob); await dbDel("files", fkey(n, a.lib)); assets.delete(n); assets.set(nn, a); refreshFiles(); apply(true); }));
+  els.push(btn("⇄", async () => { await dbPut("files", fkey(n, !a.lib), a.blob); await dbDel("files", fkey(n, a.lib)); a.lib = !a.lib; refreshFiles(); }));
+  els.push(btn("✕", async () => { const r = await ask(`Удалить «${n}»?` + (a.lib ? " Он пропадёт из всех проектов." : ""), [], ["Удалить", "Отмена"]); if (!r) return;
+    await dbDel("files", fkey(n, a.lib)); if (a.url) URL.revokeObjectURL(a.url); assets.delete(n); refreshFiles(); apply(true); }, "danger"));
+  d.append(...els); return d;
+}
+function refreshFiles() {
+  spriteCache.clear(); const fl = $("#flist"), ll = $("#llist"); fl.innerHTML = ""; ll.innerHTML = "";
+  for (const n of [...assets.keys()].sort()) { const a = assets.get(n); (a.lib ? ll : fl).append(fileRow(n, a)); }
+  if (!fl.children.length) fl.innerHTML = '<p class="hint">Пусто.</p>';
+  if (!ll.children.length) ll.innerHTML = '<p class="hint">Пусто. Перенеси сюда персонажей и фоны кнопкой ⇄ — они появятся во всех проектах.</p>';
+}
+$("#bAdd").onclick = () => $("#fAdd").click();
+$("#fAdd").onchange = async e => {
+  for (const f of e.target.files) { const name = f.name.replace(/\s+/g, "_"); await saveFile(name, f, false); }
+  e.target.value = ""; refreshFiles(); apply(true);
+};
+$("#bDemo").onclick = async () => {
+  const r = await ask("Удалить файлы и сценарий этого проекта и вернуть демо? Библиотека не пострадает.", [], ["Да, сбросить", "Отмена"]); if (!r) return;
+  stop(); for (const [k] of await dbAll("files")) if (k.startsWith(PID + "::")) await dbDel("files", k);
+  for (const [n, a] of [...assets]) if (!a.lib) assets.delete(n);
+  await makeDemo(); refreshFiles(); T = 0; apply();
+};
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === "t-" + b.dataset.t));
+});
+$("#mbOn").onchange = e => { MB_ON = e.target.checked; render(T); };
+
+// ================================================================ save / load
+let downloads = null;
+if (window.claude && window.claude.use) window.claude.use("downloads").then(d => downloads = d).catch(() => {});
+async function offerFile(filename, blob, msgEl) {
+  if (downloads) {
+    try { await downloads.save({ filename, data: blob }); msgEl && (msgEl.textContent = "Сохранено."); return; }
+    catch (e) { if (e && e.code === "declined") { msgEl && (msgEl.textContent = "Отменено."); return; } }
+  }
+  try { const file = new File([blob], filename, { type: blob.type || "application/octet-stream" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: filename }); msgEl && (msgEl.textContent = "Готово."); return; }
+  } catch (e) { if (e && e.name === "AbortError") { msgEl && (msgEl.textContent = "Отменено."); return; } }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.textContent = "Скачать " + filename;
+  a.style.cssText = "display:block;margin-top:8px;color:#ffd63c"; (msgEl || document.body).append(a); try { a.click(); } catch (e) {}
+}
+const b64 = blob => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(",")[1]); fr.readAsDataURL(blob); });
+async function saveProjectFile() {
+  const list = await listProjects(); const cur = list.find(p => p.id === PID) || { name: "проект" };
+  const files = []; for (const [n, a] of assets) files.push({ name: n, type: a.blob.type || "", lib: !!a.lib, data: await b64(a.blob) });
+  const json = JSON.stringify({ app: "pixmult", v: 3, name: cur.name, script: $("#script").value, files });
+  const d = new Date(); const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const msg = $("#okmsg"); msg.textContent = "";
+  await offerFile(`${cur.name.replace(/[\\/:*?"<>|]/g, "_")}-${stamp}.json`, new Blob([json], { type: "application/json" }), msg);
+}
+$("#fLoad").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const p = JSON.parse(await f.text()); if (p.app !== "pixmult") throw new Error("не файл проекта");
+    const id = await newProject(p.name || f.name.replace(/\.json$/i, ""), p.script || "");
+    const have = new Set((await dbAll("files")).map(([k]) => k));
+    for (const fi of p.files || []) { const bin = Uint8Array.from(atob(fi.data), c => c.charCodeAt(0)); const blob = new Blob([bin], { type: fi.type });
+      const key = (fi.lib ? "lib::" : id + "::") + fi.name; if (fi.lib && have.has(key)) continue; await dbPut("files", key, blob); }
+    await loadProject(id);
+  } catch (err) { $("#err").textContent = "Не удалось открыть проект: " + err.message; }
+};
+// ================================================================ export
+$("#bRec").onclick = async () => {
+  const msg = $("#recmsg"), out = $("#out");
+  if (!cv.captureStream || !window.MediaRecorder) { msg.textContent = "Этот браузер не умеет записывать видео с холста."; return; }
+  if (!PROJ.shots.length) return;
+  stop(); audio();
+  const W = +$("#res").value, fps = +$("#fps").value; MB_MAX = W >= 1080 ? 3 : 4;
+  sizeCanvas(W); T = 0; render(0);
+  const dest = actx.createMediaStreamDestination();
+  const stream = new MediaStream([...cv.captureStream(fps).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const types = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"];
+  const mime = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
+  let rec; try { rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: W >= 1080 ? 12e6 : 6e6 } : {}); }
+  catch (e) { msg.textContent = "Запись не запустилась: " + e.message; sizeCanvas(540); render(0); return; }
+  const chunks = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  let lock = null; try { lock = await navigator.wakeLock.request("screen"); } catch (e) {}
+  $("#bRec").disabled = true; $("#prog").style.display = "block"; out.innerHTML = ""; msg.textContent = "Запись… не сворачивай приложение.";
+  const pbar = $("#prog div"); const tick = setInterval(() => pbar.style.width = (T / PROJ.total * 100) + "%", 200);
+  rec.onstop = () => {
+    clearInterval(tick); pbar.style.width = "100%"; try { lock && lock.release(); } catch (e) {}
+    $("#bRec").disabled = false; MB_MAX = 4;
+    const ext = (rec.mimeType || mime).includes("mp4") ? "mp4" : "webm";
+    const blob = new Blob(chunks, { type: rec.mimeType || mime });
+    msg.textContent = `Готово: ${(blob.size / 1048576).toFixed(1)} МБ, ${ext.toUpperCase()}`;
+    const v = document.createElement("video"); v.src = URL.createObjectURL(blob); v.controls = true; v.playsInline = true; out.append(v);
+    const b = document.createElement("button"); b.className = "pri"; b.textContent = "Сохранить видео"; b.style.marginTop = "8px";
+    const m2 = document.createElement("div"); m2.className = "hint"; b.onclick = () => offerFile(`мульт.${ext}`, blob, m2); out.append(b, m2);
+    sizeCanvas(Math.min(540, PROJ.shots[0].size[0] * 2)); render(T);
+  };
+  rec.start(500);
+  await new Promise(r => setTimeout(r, 250));
+  onEnd = () => setTimeout(() => rec.state !== "inactive" && rec.stop(), 300);
+  play(dest);
+};
+
+// ================================================================ demo
+const DEMO_SCRIPT = `# ДЕМО. Тап по картинке — координаты. Справка — во вкладке «Справка».
+bpm 120 # время можно писать в битах: 4b = 2 с
+music @chill vol=0.3 # встроенная музыка
+
+shot 9b # ---- план 1: офис ночью
+layer office-bg.png parallax=0.6
+layer office-desk.png
+layer office-fg.png parallax=1.5 blur=2
+tint #1a2050 0.3
+vignette 0.45
+light 230 290 70 color=#8fe6ff power=0.65 flicker=0.08 # свет монитора
+light 60 250 50 color=#ffd27a power=0.35 strobe=0.15 # мигающая лампа
+weather dust amount=0.8 # пылинки в воздухе
+point phone 168 336
+actor gob goblin x=78 y=352 layer=1 anchor=24,64 fps=6 shadow=yes
+actor tel phone x=168 y=336 layer=1 anchor=18,22
+anim goblin talk fps=10
+anim goblin startle fps=14
+anim phone ring fps=20
+at 0 fx steam 236 330 dur=4.5 # пар от кружки
+
+cam 0 135 270 1.05
+cam 2.9b 130 290 1.25
+cam 3.3b @phone 2.6 -4 # рывок к телефону
+cam 6b 150 320 2.3
+cam 9b 100 320 2.0 3
+
+at 0 gob play idle
+at 3b tel play ring
+at 3b tel wobble amp=12 freq=12 decay=3
+at 3b sound @ring
+at 3b gob play startle
+at 3b gob jump 14 dur=0.35
+at 3b fx sweat 82 292
+at 2.9b sound @whoosh vol=0.6
+at 3.2b text "ДЗЫНЬ!" 135 120 size=34 dur=1.6
+at 3.2b shake 5 dur=0.6
+at 5b tel play idle
+at 6b gob play idle
+at 6.3b gob move 92 352 0.6 arc=10
+at 6.3b fx dust 92 352
+at 7.4b say "алло?.." 80 170 who=gob voice=low tail=75,250 dur=1.2
+
+shot 4 name=her hidden # ---- план для правой панели
+layer office-bg.png parallax=0.6
+tint #ff4f8a 0.65
+actor her goblin x=150 y=352 layer=0 anchor=24,64 fps=6
+cam 0 150 320 3
+at 0 her face left
+at 0.2 say "бла-бла-база-бла" 135 150 who=her voice=high tail=130,250 dur=3.4 speed=22
+
+shot 4.5 # ---- план 2: разговор
+transition diag dur=0.35
+layer office-bg.png parallax=0.6
+layer office-desk.png
+tint #1a2050 0.3
+vignette 0.45
+light 230 290 70 color=#8fe6ff power=0.65
+actor gob goblin x=92 y=352 layer=1 anchor=24,64 fps=6 shadow=yes
+anim goblin talk fps=10
+cam 0 118 315 3.2 2
+cam 3.8 112 318 3.4 0
+cam 4.5 92 318 3.6 -1
+panel her 0.3 3.8 side=right
+at 0 gob play idle
+at 3.9 say "что? КАКУЮ базу?!" 135 120 who=gob voice=low tail=60,190 dur=1.2 speed=34
+
+shot 3 # ---- план 3: удар
+transition white dur=0.3
+layer office-bg.png parallax=0.6
+layer office-desk.png
+actor gob goblin x=92 y=352 layer=1 anchor=24,64 fps=6 shadow=yes
+anim goblin startle fps=14
+cam 0 110 320 2.2
+cam 3 120 310 1.6 -3
+at 0.2 gob play startle
+at 0.2 gob squash 0.35 dur=0.35
+at 0.25 sound @hit
+at 0.25 flash dur=0.12
+at 0.25 shake 7 dur=0.5
+at 0.25 fx stars 92 300
+at 0.25 fx paper 200 330 n=10
+at 0.3 text "БАХ!" 135 380 size=40 dur=1 color=#ffffff shadow=#3c78c8
+at 0.6 gob rotate -12 0.4
+at 1.6 gob rotate 0 0.3
+at 1.7 fx confetti 135 280
+at 0.6 sub "…и так каждый вечер" dur=2.2
+at 1.7 sound @pop
+`;
+function canvasBlob(w, h, draw) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.imageSmoothingEnabled = false; draw(g);
+  return new Promise(r => c.toBlob(r, "image/png"));
+}
+async function makeDemo() {
+  const I = INK; const put = async (name, blob) => saveFile(name, blob, false);
+  await put("office-bg.png", await canvasBlob(270, 480, g => {
+    g.fillStyle = "#343866"; g.fillRect(0, 0, 270, 480);
+    g.fillStyle = "#464c82"; for (let y = 0; y < 380; y += 4) for (let x = (y / 4 % 2) * 2; x < 270; x += 4) g.fillRect(x, y, 1, 1);
+    g.fillStyle = "#14163a"; g.fillRect(20, 120, 100, 120); g.strokeStyle = I; g.lineWidth = 3; g.strokeRect(20, 120, 100, 120);
+    for (let i = 0; i < 9; i++) { const h = 30 + (i * 37 % 60); g.fillStyle = "#22224a"; g.fillRect(24 + i * 11, 238 - h, 9, h);
+      g.fillStyle = "#ffd678"; for (let y = 240 - h; y < 234; y += 6) if ((i + y) % 3) g.fillRect(26 + i * 11, y, 2, 2); }
+    g.fillStyle = "#ffd63c"; g.fillRect(160, 120, 70, 46); g.strokeRect(160, 120, 70, 46);
+    g.fillStyle = I; g.font = "bold 14px sans-serif"; g.fillText("KPI", 180, 140);
+    g.fillStyle = "#241e34"; g.fillRect(0, 380, 270, 100); g.fillStyle = I; g.fillRect(0, 378, 270, 3);
+  }));
+  await put("office-desk.png", await canvasBlob(270, 480, g => {
+    g.strokeStyle = I; g.lineWidth = 2;
+    g.fillStyle = "#965f3a"; g.fillRect(100, 336, 170, 9); g.strokeRect(100, 336, 170, 9);
+    g.fillStyle = "#623c26"; g.fillRect(110, 345, 8, 60); g.fillRect(250, 345, 8, 60);
+    g.fillStyle = "#d6ccb0"; g.fillRect(196, 262, 66, 70); g.strokeRect(196, 262, 66, 70);
+    g.fillStyle = "#78e0ff"; g.fillRect(204, 270, 50, 40); g.strokeRect(204, 270, 50, 40);
+    g.fillStyle = "#faf8f0"; g.fillRect(230, 324, 12, 12); g.strokeRect(230, 324, 12, 12);
+    g.fillStyle = "#3c3c46"; g.fillRect(40, 300, 12, 60); g.fillRect(40, 352, 60, 8);
+  }));
+  await put("office-fg.png", await canvasBlob(270, 480, g => {
+    g.fillStyle = "#286e46"; g.strokeStyle = I; g.lineWidth = 2;
+    for (let i = 0; i < 4; i++) { g.beginPath(); g.ellipse(250 + i * 8, 470 - i * 26, 30, 12, -0.8 - i * .2, 0, 7); g.fill(); g.stroke(); }
+  }));
+  const gob = (g, ox, o = {}) => {
+    const y = 6 + (o.dy || 0); g.strokeStyle = I; g.lineWidth = 1.5;
+    g.fillStyle = "#563e68"; g.beginPath(); g.ellipse(ox + 24, y + 42, 19, 17, 0, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = "#8cc152"; g.beginPath(); g.moveTo(ox + 14, y + 10); g.lineTo(ox + 1, y - 2 - (o.ear || 0)); g.lineTo(ox + 15, y + 17); g.fill(); g.stroke();
+    g.beginPath(); g.ellipse(ox + 25, y + 13, 13, 12, 0, 0, 7); g.fill(); g.stroke();
+    const er = o.eye || 3; g.fillStyle = "#faf078"; g.beginPath(); g.arc(ox + 30, y + 10, er, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = I; g.fillRect(ox + 31, y + 9, 2, 2);
+    g.fillStyle = "#8cc152"; g.beginPath(); g.moveTo(ox + 36, y + 11); g.lineTo(ox + 46, y + 17); g.lineTo(ox + 36, y + 19); g.fill(); g.stroke();
+    if (o.mouth) { g.fillStyle = "#46141e"; g.beginPath(); g.ellipse(ox + 30, y + 21, 4, o.mouth / 2, 0, 0, 7); g.fill(); g.stroke(); }
+    else { g.beginPath(); g.moveTo(ox + 25, y + 21); g.lineTo(ox + 35, y + 20); g.stroke(); }
+  };
+  const strip = async (name, n, f) => put(name, await canvasBlob(48 * n, 64, g => { for (let k = 0; k < n; k++) f(g, k * 48, k); }));
+  await strip("goblin-idle-4.png", 4, (g, ox, k) => gob(g, ox, { dy: [0, 0, 1, 1][k] }));
+  await strip("goblin-talk-4.png", 4, (g, ox, k) => gob(g, ox, { mouth: [0, 3, 6, 9][k] }));     // от закрытого к открытому
+  await strip("goblin-startle-2.png", 2, (g, ox, k) => gob(g, ox, { eye: 6, mouth: 8, ear: 8, dy: -k * 2 }));
+  await put("goblin-blink-1.png", await canvasBlob(48, 64, g => { g.fillStyle = "#8cc152"; g.beginPath(); g.arc(30, 16, 4, 0, 7); g.fill(); g.fillStyle = I; g.fillRect(27, 16, 7, 1.5); }));
+  const phone = (g, ox, hop) => { g.strokeStyle = I; g.lineWidth = 1.5; g.fillStyle = "#d63a3a";
+    g.beginPath(); g.moveTo(ox + 2, 21); g.lineTo(ox + 6, 9); g.lineTo(ox + 30, 9); g.lineTo(ox + 34, 21); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = "#faf8f0"; g.beginPath(); g.ellipse(ox + 18, 15, 6, 4, 0, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = "#d63a3a"; g.fillRect(ox + 4, 2 - hop, 28, 5); g.strokeRect(ox + 4, 2 - hop, 28, 5); };
+  await put("phone-idle-1.png", await canvasBlob(36, 22, g => phone(g, 0, 0)));
+  await put("phone-ring-2.png", await canvasBlob(72, 22, g => { phone(g, 0, 0); phone(g, 36, 2); }));
+  $("#script").value = DEMO_SCRIPT; await dbPut("meta", "script:" + PID, DEMO_SCRIPT);
+}
+
+// ================================================================ projects & library
+let PID = "p1";
+const fkey = (name, lib) => (lib ? "lib::" : PID + "::") + name;
+async function listProjects() { return (await dbGet("meta", "projects")) || []; }
+async function setProjects(l) { await dbPut("meta", "projects", l); }
+async function migrate() {
+  let list = await listProjects(); if (list.length) return;
+  const all = await dbAll("files"); const old = await dbGet("meta", "script");
+  for (const [k, b] of all) if (!k.includes("::")) { await dbPut("files", "p1::" + k, b); await dbDel("files", k); }
+  if (old) await dbPut("meta", "script:p1", old);
+  await setProjects([{ id: "p1", name: old && !old.startsWith("# ДЕМО.") ? "Мой проект" : "Демо" }]); await dbPut("meta", "cur", "p1");
+}
+async function loadProject(pid) {
+  stop(); PID = pid; await dbPut("meta", "cur", pid);
+  for (const a of assets.values()) if (a.url) URL.revokeObjectURL(a.url); assets.clear(); spriteCache.clear();
+  const all = await dbAll("files");
+  for (const [k, b] of all) if (k.startsWith("lib::")) await loadAsset(k.slice(5), b, true);
+  for (const [k, b] of all) if (k.startsWith(pid + "::")) await loadAsset(k.slice(pid.length + 2), b, false);
+  let s = await dbGet("meta", "script:" + pid);
+  if (s == null || (s.startsWith("# ДЕМО.") && !s.includes("music @chill"))) { await makeDemo(); s = DEMO_SCRIPT; }
+  $("#script").value = s; T = 0; await refreshProjSelect(); refreshFiles(); await apply(true);
+}
+async function refreshProjSelect() {
+  const list = await listProjects(); const sel = $("#proj"); sel.innerHTML = "";
+  for (const p of list) { const o = document.createElement("option"); o.value = p.id; o.textContent = p.name; if (p.id === PID) o.selected = true; sel.append(o); }
+}
+$("#proj").onchange = e => loadProject(e.target.value);
+async function newProject(name, script) {
+  const list = await listProjects(); const id = "p" + Date.now().toString(36);
+  list.push({ id, name }); await setProjects(list); await dbPut("meta", "script:" + id, script ?? "shot 4\n");
+  return id;
+}
+$("#bMenu").onclick = async () => {
+  const v = await menu("Проект", [["new", "Новый проект"], ["rename", "Переименовать"], ["copy", "Сделать копию"], ["save", "Сохранить в файл"], ["open", "Открыть файл проекта"], ["del", "Удалить проект"]]);
+  const list = await listProjects(); const cur = list.find(p => p.id === PID);
+  if (v === "new") { const r = await ask("Новый проект", [{ key: "name", label: "Название", value: "Новый ролик" }]); if (!r) return;
+    const id = await newProject(r.name || "Новый ролик", "# Новый проект\nshot 4\ncam 0 135 240 1\n"); await loadProject(id); }
+  else if (v === "rename") { const r = await ask("Переименовать", [{ key: "name", label: "Название", value: cur.name }]); if (!r || !r.name) return;
+    cur.name = r.name; await setProjects(list); refreshProjSelect(); }
+  else if (v === "copy") { const id = await newProject(cur.name + " (копия)", $("#script").value);
+    for (const [k, b] of await dbAll("files")) if (k.startsWith(PID + "::")) await dbPut("files", id + "::" + k.slice(PID.length + 2), b);
+    await loadProject(id); }
+  else if (v === "del") { if (list.length < 2) { await ask("Это единственный проект — удалить нельзя.", [], ["OK"]); return; }
+    const r = await ask(`Удалить «${cur.name}» со всеми файлами проекта? Библиотека останется.`, [], ["Удалить", "Отмена"]); if (!r) return;
+    for (const [k] of await dbAll("files")) if (k.startsWith(PID + "::")) await dbDel("files", k);
+    await dbDel("meta", "script:" + PID); const rest = list.filter(p => p.id !== PID); await setProjects(rest); await loadProject(rest[0].id); }
+  else if (v === "save") saveProjectFile();
+  else if (v === "open") $("#fLoad").click();
+};
+async function saveFile(name, blob, lib) { await dbPut("files", fkey(name, lib), blob); await loadAsset(name, blob, lib); }
+
+// ================================================================ builder: «＋ Строка» и шаблоны
+let lastTap = null;   // {wx, wy, sx, sy}
+function curShot() { const [i, t] = locate(T); return { sh: PROJ.shots[i], i, t: Math.round(t * 20) / 20 }; }
+function tapOr(sh) { if (lastTap) return lastTap; const [cx, cy] = camera(sh, 0); return { wx: Math.round(cx), wy: Math.round(cy), sx: sh.size[0] / 2, sy: Math.round(sh.size[1] * .25) }; }
+function worldToScreen(sh, t, wx, wy) {
+  const [cx, cy, z, r] = camera(sh, t); const dx = (wx - cx) * z, dy = (wy - cy) * z;
+  return [Math.round(sh.size[0] / 2 + dx * Math.cos(r) - dy * Math.sin(r)), Math.round(sh.size[1] / 2 + dx * Math.sin(r) + dy * Math.cos(r))];
+}
+function insertLines(sh, newLines, where = "end") {
+  const lines = $("#script").value.split("\n");
+  let start = sh && sh.line != null ? sh.line : -1, end = sh && sh.endLine != null ? sh.endLine : lines.length - 1;
+  let idx;
+  if (where === "header") { idx = start; for (let i = start + 1; i <= end; i++) { const l = lines[i].trim(); if (/^(at|cam|panel)\b/.test(l)) break; if (l) idx = i; } }
+  else if (where === "script-end") idx = lines.length - 1;
+  else { idx = end; while (idx > start && !lines[idx].trim()) idx--; }
+  lines.splice(idx + 1, 0, ...newLines); $("#script").value = lines.join("\n"); apply(true);
+}
+const fmtN = v => String(Math.round(v * 100) / 100);
+$("#bAddLine").onclick = async () => {
+  if (!PROJ.shots.length) return; const { sh, t } = curShot(); const tp = tapOr(sh);
+  const actors = Object.keys(sh.actors); const sounds = ["@ring", "@thud", "@click", "@type", "@whoosh", "@pop", "@boing", "@beep", "@hit", "@step", "@knock", "@punch", "@glass", "@blip", "@alarm", "@coin", "@jump", "@fail", "@tada",
+    ...[...assets].filter(([, a]) => a.kind === "snd").map(([n]) => n)];
+  const kind = await menu(`Добавить в момент ${fmtN(t)} с`, [["act", "Действие персонажа"], ["cam", "Ключ камеры (текущий кадр)"], ["text", "Надпись"], ["say", "Реплика"], ["sub", "Субтитр"],
+    ["sound", "Звук"], ["fx", "Эффект"], ["shake", "Тряска"], ["flash", "Вспышка"], ["trans", "Переход в этот план"], ["point", "Точка (из тапа)"], ["weather", "Погода"]], true);
+  if (!kind) return;
+  let L = null, where = "end";
+  if (kind === "act") {
+    if (!actors.length) { await ask("В этом плане нет персонажей (строка actor).", [], ["OK"]); return; }
+    const r = await ask("Действие", [{ key: "a", label: "Персонаж", type: "select", options: actors }, { key: "c", label: "Действие", type: "select",
+      options: ["play", "move", "jump", "rotate", "scale", "wobble", "squash", "swing", "face", "talk", "hide", "show"] },
+      { key: "p", label: "Параметры (пусто — по умолчанию; для move берётся точка тапа)", value: "" }]); if (!r) return;
+    const anims = [...spriteAnims(sh.actors[r.a].sprite).keys()];
+    const def = { play: anims.find(a => a !== "blink" && a !== "idle") || anims[0], move: `${tp.wx} ${tp.wy} 0.5`, jump: "12", rotate: "15 0.3", scale: "1.3 0.3", wobble: "amp=10",
+      squash: "0.3", swing: "amp=20 freq=1.5 dur=2", face: "left", talk: sounds.find(s => s[0] !== "@") || "voice.m4a", hide: "", show: "" }[r.c];
+    L = `at ${fmtN(t)} ${r.a} ${r.c} ${r.p || def}`.trim();
+  } else if (kind === "cam") { const c = camera(sh, t); L = `cam ${fmtN(t)} ${Math.round(c[0])} ${Math.round(c[1])} ${fmtN(c[2])}${c[3] ? " " + Math.round(c[3] * 180 / Math.PI) : ""}`; }
+  else if (kind === "text") { const r = await ask("Надпись", [{ key: "s", label: "Текст", value: "БАХ!" }, { key: "size", label: "Размер", type: "number", value: 30 }, { key: "dur", label: "Длительность, с", type: "number", value: 1.5 }]); if (!r) return;
+    L = `at ${fmtN(t)} text "${r.s}" ${Math.round(tp.sx)} ${Math.round(tp.sy)} size=${r.size} dur=${r.dur}`; }
+  else if (kind === "say") { const r = await ask("Реплика", [{ key: "s", label: "Текст", value: "" }, { key: "who", label: "Кто говорит (рот и голос)", type: "select", options: ["—", ...actors] },
+      { key: "voice", label: "Голос", type: "select", options: ["low", "mid", "high", "robot", "none"] }, { key: "dur", label: "Длительность, с", type: "number", value: 2 }]); if (!r) return;
+    let x = tp.sx, y = tp.sy, tail = "";
+    if (r.who !== "—") { const a = actorState(sh.actors[r.who], t); const [ax, ay] = worldToScreen(sh, t, a.x, a.y - 40); x = clamp(ax, 70, sh.size[0] - 70); y = Math.max(30, ay - 50); tail = ` tail=${ax},${ay - 10}`; }
+    L = `at ${fmtN(t)} say "${r.s}" ${Math.round(x)} ${Math.round(y)}${r.who !== "—" ? " who=" + r.who : ""} voice=${r.voice}${tail} dur=${r.dur}`; }
+  else if (kind === "sub") { const r = await ask("Субтитр", [{ key: "s", label: "Текст", value: "" }, { key: "dur", label: "Длительность, с", type: "number", value: 2 }]); if (!r) return; L = `at ${fmtN(t)} sub "${r.s}" dur=${r.dur}`; }
+  else if (kind === "sound") { const r = await ask("Звук", [{ key: "s", label: "Звук", type: "select", options: sounds }, { key: "v", label: "Громкость", type: "number", value: 1 }]); if (!r) return; L = `at ${fmtN(t)} sound ${r.s} vol=${r.v}`; }
+  else if (kind === "fx") { const r = await ask("Эффект (в точке тапа)", [{ key: "f", label: "Тип", type: "select", options: FX_TYPES }]); if (!r) return; L = `at ${fmtN(t)} fx ${r.f} ${tp.wx} ${tp.wy}`; }
+  else if (kind === "shake") L = `at ${fmtN(t)} shake 5 dur=0.4`;
+  else if (kind === "flash") L = `at ${fmtN(t)} flash dur=0.12`;
+  else if (kind === "trans") { const r = await ask("Переход", [{ key: "x", label: "Тип", type: "select", options: TRANS.slice(1) }, { key: "d", label: "Длительность, с", type: "number", value: 0.4 }]); if (!r) return; L = `transition ${r.x} dur=${r.d}`; where = "header"; }
+  else if (kind === "point") { const r = await ask("Точка", [{ key: "n", label: "Имя", value: "p1" }]); if (!r) return; L = `point ${r.n} ${tp.wx} ${tp.wy}`; where = "header"; }
+  else if (kind === "weather") { const r = await ask("Погода", [{ key: "w", label: "Тип", type: "select", options: ["rain", "snow", "dust"] }, { key: "a", label: "Сила", type: "number", value: 1 }, { key: "wind", label: "Ветер (-1…1)", type: "number", value: 0.2 }]); if (!r) return;
+    L = `weather ${r.w} amount=${r.a} wind=${r.wind}`; where = "header"; }
+  if (L) { insertLines(sh, [L], where); $("#okmsg").textContent = "добавлено: " + L; }
+};
+const TEMPLATES = [
+  ["copy", "Новый план — та же сцена"], ["scare", "Испуг персонажа"], ["ring", "Звонок / сигнал предмета"], ["hit", "Удар / падение"],
+  ["push", "Наезд + реплика"], ["dialog", "Разговор двух"], ["whip", "Резкий рывок камеры к точке"], ["finale", "Финал с конфетти"],
+];
+$("#bTpl").onclick = async () => {
+  if (!PROJ.shots.length) return; const { sh, t } = curShot(); const tp = tapOr(sh); const actors = Object.keys(sh.actors);
+  const k = await menu(`Шаблон с момента ${fmtN(t)} с`, TEMPLATES, true); if (!k) return;
+  const at = (dt, s) => `at ${fmtN(t + dt)} ${s}`;
+  const needA = async (label, n = 1) => { if (actors.length < n) { await ask(`Нужно персонажей в плане: ${n}.`, [], ["OK"]); return null; }
+    const f = []; for (let i = 0; i < n; i++) f.push({ key: "a" + i, label: n > 1 ? `${label} ${i + 1}` : label, type: "select", options: actors, value: actors[i] }); return f; };
+  const scr = (a, dy = 0) => { const s = actorState(sh.actors[a], t); return worldToScreen(sh, t, s.x, s.y + dy); };
+  const has = (a, anim) => spriteAnims(sh.actors[a].sprite).has(anim);
+  let out = [], where = "end";
+  if (k === "copy") {
+    const lines = $("#script").value.split("\n").slice(sh.line + 1, sh.endLine + 1).filter(l => !/^\s*(at|cam|panel|transition)\b/.test(l) && l.trim());
+    const c = camera(sh, sh.dur); out = ["", `shot 3`, `transition cut`, ...lines, `cam 0 ${Math.round(c[0])} ${Math.round(c[1])} ${fmtN(c[2])}`]; where = "script-end";
+  } else if (k === "scare") { const f = await needA("Кто пугается"); if (!f) return; const r = await ask("Испуг", f); if (!r) return; const a = r.a0; const s = actorState(sh.actors[a], t); const [sx, sy] = scr(a, -60);
+    out = [has(a, "startle") ? at(0, `${a} play startle`) : null, at(0, `${a} jump 14 dur=0.35`), at(0, `fx sweat ${Math.round(s.x)} ${Math.round(s.y - 50)}`), at(0, "sound @boing"),
+      at(0, "shake 4 dur=0.3"), at(0.05, `text "!?" ${sx} ${Math.max(20, sy - 20)} size=26 dur=1`)].filter(Boolean); }
+  else if (k === "ring") { const f = await needA("Что звонит"); if (!f) return; const r = await ask("Звонок", [...f, { key: "s", label: "Надпись", value: "ДЗЫНЬ!" }]); if (!r) return;
+    const [sx, sy] = scr(r.a0, -30);
+    out = [has(r.a0, "ring") ? at(0, `${r.a0} play ring`) : null, at(0, `${r.a0} wobble amp=12 freq=12 decay=3`), at(0, "sound @ring"), at(0.05, `text "${r.s}" ${clamp(sx, 60, 210)} ${Math.max(40, sy - 40)} size=32 dur=1.4`), at(0.05, "shake 4 dur=0.5")].filter(Boolean); }
+  else if (k === "hit") { const f = await needA("Кого бьёт"); if (!f) return; const r = await ask("Удар", [...f, { key: "s", label: "Надпись", value: "БАХ!" }]); if (!r) return;
+    const s = actorState(sh.actors[r.a0], t);
+    out = [at(0, "sound @hit"), at(0, "flash dur=0.12"), at(0, "shake 7 dur=0.5"), at(0, `fx stars ${Math.round(s.x)} ${Math.round(s.y - 50)}`), at(0, `${r.a0} squash 0.35 dur=0.35`), at(0.05, `text "${r.s}" 135 380 size=40 dur=1 color=#ffffff shadow=#3c78c8`)]; }
+  else if (k === "push") { const f = await needA("Кто говорит"); if (!f) return; const r = await ask("Наезд + реплика", [...f, { key: "s", label: "Реплика", value: "что?!" }, { key: "v", label: "Голос", type: "select", options: ["low", "mid", "high", "robot", "none"] }]); if (!r) return;
+    const c = camera(sh, t), s = actorState(sh.actors[r.a0], t);
+    out = [`cam ${fmtN(t)} ${Math.round(c[0])} ${Math.round(c[1])} ${fmtN(c[2])}`, `cam ${fmtN(t + 0.45)} ${Math.round(s.x)} ${Math.round(s.y - 30)} ${fmtN(c[2] * 1.7)}`, at(0.3, "sound @whoosh vol=0.5"),
+      at(0.5, `say "${r.s}" 135 110 who=${r.a0} voice=${r.v} tail=135,200 dur=${fmtN(Math.max(1.2, [...r.s].length / 26 + 0.8))}`)]; }
+  else if (k === "dialog") { const f = await needA("Персонаж", 2); if (!f) return; const r = await ask("Разговор двух", [...f, { key: "s1", label: "Реплика 1", value: "привет" }, { key: "s2", label: "Реплика 2", value: "ну привет" },
+      { key: "v1", label: "Голос 1", type: "select", options: ["low", "mid", "high", "robot"] }, { key: "v2", label: "Голос 2", type: "select", options: ["high", "mid", "low", "robot"] }]); if (!r) return;
+    const z = camera(sh, t)[2] * 1.4; const A = actorState(sh.actors[r.a0], t), B = actorState(sh.actors[r.a1], t);
+    const d1 = Math.max(1.2, [...r.s1].length / 26 + 0.8), d2 = Math.max(1.2, [...r.s2].length / 26 + 0.8);
+    out = [`cam ${fmtN(t)} ${Math.round(A.x)} ${Math.round(A.y - 30)} ${fmtN(z)}`, at(0.1, `say "${r.s1}" 135 110 who=${r.a0} voice=${r.v1} tail=135,200 dur=${fmtN(d1)}`),
+      `cam ${fmtN(t + d1)} ${Math.round(A.x)} ${Math.round(A.y - 30)} ${fmtN(z)}`, `cam ${fmtN(t + d1 + 0.25)} ${Math.round(B.x)} ${Math.round(B.y - 30)} ${fmtN(z)}`,
+      at(d1 + 0.3, `say "${r.s2}" 135 110 who=${r.a1} voice=${r.v2} tail=135,200 dur=${fmtN(d2)}`)]; }
+  else if (k === "whip") { const c = camera(sh, t);
+    out = [`cam ${fmtN(t)} ${Math.round(c[0])} ${Math.round(c[1])} ${fmtN(c[2])}`, `cam ${fmtN(t + 0.18)} ${tp.wx} ${tp.wy} ${fmtN(c[2] * 2)} -4`, at(-0.05, "sound @whoosh vol=0.7")]; }
+  else if (k === "finale") { const r = await ask("Финал", [{ key: "s", label: "Надпись", value: "КОНЕЦ" }]); if (!r) return; const c = camera(sh, t);
+    out = [`cam ${fmtN(t)} ${Math.round(c[0])} ${Math.round(c[1])} ${fmtN(c[2])}`, `cam ${fmtN(t + 1.2)} ${Math.round(c[0])} ${Math.round(c[1])} ${fmtN(Math.max(1, c[2] * 0.7))}`,
+      at(0, `fx confetti ${tp.wx} ${tp.wy - 40}`), at(0, "sound @tada"), at(0.2, `text "${r.s}" 135 120 size=36 dur=2`)]; }
+  out = out.map(l => l.replace(/^at (-[\d.]+)/, "at 0"));
+  insertLines(sh, out, where); $("#okmsg").textContent = `шаблон добавлен: ${out.filter(l => l).length} строк`;
+};
+
+// ================================================================ camera mode: пальцем
+let CAMO = null, camRec = null; const ptrs = new Map(); let pinch0 = null;
+function setCamMode(on) {
+  document.body.classList.toggle("cam", on); $("#bCam").classList.toggle("on", on);
+  if (on) { const [i, t] = locate(T); const c = camera(PROJ.shots[i], t, true); CAMO = { i, x: c[0], y: c[1], z: c[2], r: c[3] }; }
+  else { CAMO = null; if (camRec) stopCamRec(); }
+  render(T);
+}
+$("#bCam").onclick = () => setCamMode(!CAMO);
+cv.addEventListener("pointerdown", e => { if (!CAMO) return; cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); pinch0 = null; e.preventDefault(); });
+cv.addEventListener("pointermove", e => {
+  if (!CAMO || !ptrs.has(e.pointerId)) return; e.preventDefault();
+  const prev = ptrs.get(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  const sh = PROJ.shots[CAMO.i]; const rect = cv.getBoundingClientRect(); const k = sh.size[0] / rect.width;  // css px -> мир при zoom 1
+  if (ptrs.size === 1) { CAMO.x -= (e.clientX - prev[0]) * k / CAMO.z; CAMO.y -= (e.clientY - prev[1]) * k / CAMO.z; }
+  else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    if (pinch0) { CAMO.z = clamp(CAMO.z * d / pinch0, 0.5, 8); } pinch0 = d;
+    CAMO.x -= (e.clientX - prev[0]) * k / CAMO.z / 2; CAMO.y -= (e.clientY - prev[1]) * k / CAMO.z / 2; }
+  if (!playing) render(T);
+});
+const endPtr = e => { ptrs.delete(e.pointerId); pinch0 = null; };
+cv.addEventListener("pointerup", endPtr); cv.addEventListener("pointercancel", endPtr);
+cv.addEventListener("wheel", e => { if (!CAMO) return; e.preventDefault(); CAMO.z = clamp(CAMO.z * Math.exp(-e.deltaY * 0.0015), 0.5, 8); if (!playing) render(T); }, { passive: false });
+$("#bKey").onclick = () => {
+  if (!CAMO) return; const sh = PROJ.shots[CAMO.i]; const [i, t] = locate(T); if (i !== CAMO.i) return;
+  insertLines(sh, [`cam ${fmtN(Math.round(t * 20) / 20)} ${Math.round(CAMO.x)} ${Math.round(CAMO.y)} ${fmtN(CAMO.z)}`]); $("#okmsg").textContent = "ключ камеры добавлен";
+};
+$("#bCamRec").onclick = () => { if (camRec) stopCamRec(); else startCamRec(); };
+function startCamRec() {
+  const [i, t] = locate(T); CAMO.i = i; camRec = { i, t0: t, samples: [] }; $("#bCamRec").textContent = "■ Стоп"; $("#bCamRec").classList.add("rec");
+  onEnd = () => { if (camRec) stopCamRec(); }; play();
+}
+function camRecSample() {
+  if (!camRec) return; const [i, t] = locate(T); if (i !== camRec.i) { stopCamRec(); return; }
+  const s = camRec.samples; if (!s.length || t - s[s.length - 1][0] >= 0.25) s.push([t, CAMO.x, CAMO.y, CAMO.z]);
+}
+function stopCamRec() {
+  const rec = camRec; camRec = null; $("#bCamRec").textContent = "● Запись камеры"; $("#bCamRec").classList.remove("rec"); if (playing) stop();
+  if (!rec || rec.samples.length < 2) return; const sh = PROJ.shots[rec.i]; const t1 = rec.samples[rec.samples.length - 1][0];
+  const lines = $("#script").value.split("\n");
+  const kill = PROJ.ticks.filter(k => k.shot === sh && k.kind === "cam" && k.t >= rec.t0 - 1e-6 && k.t <= t1 + 1e-6).map(k => k.line).sort((a, b) => b - a);
+  let end = sh.endLine; for (const li of kill) { lines.splice(li, 1); if (li <= end) end--; }
+  while (end > sh.line && !lines[end].trim()) end--;
+  const add = rec.samples.map(([t, x, y, z]) => `cam ${fmtN(t)} ${Math.round(x)} ${Math.round(y)} ${fmtN(z)}`);
+  lines.splice(end + 1, 0, ...add); $("#script").value = lines.join("\n"); setCamMode(false); apply(true);
+  $("#okmsg").textContent = `камера записана: ${add.length} ключей`;
+}
+
+// ================================================================ микрофон
+let micRec = null;
+$("#bMic").onclick = async () => {
+  const m = $("#micmsg");
+  if (micRec) { micRec.stop(); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { m.textContent = "Запись с микрофона здесь недоступна."; return; }
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { m.textContent = "Нет доступа к микрофону. В окне Claude микрофон закрыт — открой версию с GitHub Pages."; return; }
+  const types = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"]; const mime = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
+  const chunks = []; micRec = new MediaRecorder(stream, mime ? { mimeType: mime } : {}); micRec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  micRec.onstop = async () => { stream.getTracks().forEach(t => t.stop()); const type = micRec.mimeType || mime; micRec = null; $("#bMic").textContent = "🎤 Записать голос"; $("#bMic").classList.remove("rec");
+    const blob = new Blob(chunks, { type }); let n = 1; while (assets.has(`голос-${n}.${type.includes("mp4") ? "m4a" : "webm"}`)) n++;
+    const name = `голос-${n}.${type.includes("mp4") ? "m4a" : "webm"}`; await saveFile(name, blob, false); refreshFiles();
+    m.textContent = `Сохранено: ${name}. В сценарии: at 1 gob talk ${name}`; };
+  micRec.start(); $("#bMic").textContent = "■ Стоп"; $("#bMic").classList.add("rec"); m.textContent = "Идёт запись…";
+};
+
+// ================================================================ зоны Shorts и обложка
+let SAFE = false; const scv = $("#safecv");
+function drawSafe() {
+  if (!SAFE) { scv.style.display = "none"; return; }
+  scv.style.display = "block"; scv.style.left = cv.offsetLeft + "px"; scv.style.top = cv.offsetTop + "px";
+  const w = cv.clientWidth, h = cv.clientHeight, dpr = window.devicePixelRatio || 1; scv.style.width = w + "px"; scv.style.height = h + "px";
+  scv.width = Math.round(w * dpr); scv.height = Math.round(h * dpr); const g = scv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // примерные зоны интерфейса YouTube Shorts: верх, низ (название, описание), справа (кнопки)
+  const top = h * .08, bot = h * .2, right = w * .16, left = w * .04;
+  g.fillStyle = "rgba(229,72,77,.28)"; g.fillRect(0, 0, w, top); g.fillRect(0, h - bot, w, bot); g.fillRect(w - right, top, right, h - top - bot); g.fillRect(0, top, left, h - top - bot);
+  g.setLineDash([5, 4]); g.strokeStyle = "#ffd63c"; g.lineWidth = 1.5; g.strokeRect(left, top, w - left - right, h - top - bot);
+  g.fillStyle = "#fff"; g.font = "10px -apple-system,sans-serif"; g.fillText("кнопки", w - right + 3, h / 2); g.fillText("название / описание", 6, h - bot + 14);
+}
+$("#bSafe").onclick = () => { SAFE = !SAFE; $("#bSafe").classList.toggle("on", SAFE); drawSafe(); };
+window.addEventListener("resize", drawSafe);
+$("#bCover").onclick = async () => {
+  if (!PROJ.shots.length) return; stop(); const keep = cv.width; sizeCanvas(1080); render(T);
+  const blob = await new Promise(r => cv.toBlob(r, "image/png")); sizeCanvas(keep); render(T); drawSafe();
+  await offerFile(`обложка-${fmtN(T)}с.png`, blob, $("#recmsg"));
+};
+
+// ================================================================ boot
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+(async () => {
+  await dbOpen();
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+  await migrate();
+  const list = await listProjects(); let cur = await dbGet("meta", "cur"); if (!list.find(p => p.id === cur)) cur = list[0].id;
+  await loadProject(cur);
+  if (!store.db) $("#err").textContent = "Хранилище браузера недоступно: работа не сохранится между запусками — сохраняй проект в файл (⋯).";
+})();
+</script>
+</body>
+</html>
